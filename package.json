@@ -1,0 +1,30 @@
+{
+  "name": "Backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "packageManager": "pnpm@10.30.3",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "tsx watch ./src/index.ts",
+    "build": "tsc",
+    "start": "node ./dist/index.js",
+    "database" : "docker compose -f docker-compose.dev.yml up -d"
+  },
+  "devDependencies": {
+    "@types/node": "^25.3.5",
+    "@types/pg": "^8.18.0",
+    "drizzle-kit": "^0.31.9",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "dotenv": "^17.3.1",
+    "drizzle-orm": "^0.45.1",
+    "fastify": "^5.8.2",
+    "pg": "^8.20.0"
+  }
+}

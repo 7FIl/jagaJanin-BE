@@ -1,0 +1,23 @@
+services:
+
+  app:
+    build: .
+    container_name: login-demo-app
+    restart: unless-stopped
+    ports:
+      - "${API_PORT}:${API_PORT}"
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+  Database:
+    image: postgres:16-alpine
+    container_name: login-demo-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
