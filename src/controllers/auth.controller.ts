@@ -8,9 +8,9 @@ export function buildAuthController(fastify: FastifyInstance) {
             request: FastifyRequest<{ Body: registerInput }>,
             reply: FastifyReply,
         ) {
-            const { fullName, email, password } = request.body;
+            const input = request.body;
 
-            const existingUser = await authService.checkUserExists(email);
+            const existingUser = await authService.checkUserExists(input.email);
             if (existingUser) {
                 return reply.status(409).send({
                     success: false,
@@ -18,7 +18,7 @@ export function buildAuthController(fastify: FastifyInstance) {
                 });
             }
 
-            const newUser = await authService.createNewUser({ fullName, email, password });
+            const newUser = await authService.createNewUser(input);
             return reply.status(201).send({
                 success: true,
                 data: newUser,
@@ -30,10 +30,10 @@ export function buildAuthController(fastify: FastifyInstance) {
             request: FastifyRequest<{ Body: loginInput }>,
             reply: FastifyReply,
         ) {
-            const { email, password } = request.body;
+            const input = request.body;
 
             try {
-                const user = await authService.verifyUserCredentials({ email, password });
+                const user = await authService.verifyUserCredentials(input);
 
                 const token = fastify.jwt.sign(
                     { id: user.id },
@@ -45,10 +45,14 @@ export function buildAuthController(fastify: FastifyInstance) {
                     data: { user, token },
                     message: "User logged in successfully",
                 });
-            } catch {
+                
+            } catch (error) {
+                const errorMessage =
+                    error instanceof Error ? error.message : "An error occurred";
+
                 return reply.status(401).send({
                     success: false,
-                    message: "Invalid credentials",
+                    message: errorMessage,
                 });
             }
         },
