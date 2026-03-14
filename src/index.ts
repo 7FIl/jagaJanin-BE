@@ -2,6 +2,7 @@ import fastify from "fastify";
 import fastifyJwt from "@fastify/jwt";
 import { checkDatabaseConnection } from "./db/index.js";
 import { authroutes } from "./routes/auth.routes.js";
+import { formRoutes } from "./routes/form.routes.js";
 import config from "dotenv/config";
 
 const app = fastify();
@@ -21,18 +22,19 @@ app.register(fastifyJwt, {
     secret: jwtSecret
     });
 
-app.get("/", (request, reply) => {
+app.get("/v1/", (request, reply) => {
   return { success: "true" };
 });
 
-app.get("/health", async (request, reply) => {
+app.get("/v1/health", async (request, reply) => {
     if (await checkDatabaseConnection()) {
         return { status: 'healthy', database: 'connected' };
     }
     return { status: 'unhealthy', database: 'disconnected' };
 });
 
-app.register(authroutes, { prefix: "/auth" });
+app.register(authroutes, { prefix: "/v1/auth" });
+app.register(formRoutes, { prefix: "/v1/forms" });
 
 app.listen({ port: PORT as unknown as number }, (err, address) => {
   if (err) {
