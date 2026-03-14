@@ -31,6 +31,15 @@ const calculateBmr = (weight: number, height: number, age: number): number => {
 export class FormService {
 
     async submitOnboardingForm(id: string, input: formInput): Promise<boolean> {
+        
+        async function checkUserOnboardingStatus(userId: string): Promise<boolean> {
+            const [user] = await db
+            .select({ completeOnboarding: users.complete_onboarding })
+            .from(users)
+            .where(eq(users.id, userId));
+            return user ? user.completeOnboarding : false;
+        }
+        
         const [activityLevel] = await db
         .select({ multiplier: activity_level.multiplier })
         .from(activity_level)
