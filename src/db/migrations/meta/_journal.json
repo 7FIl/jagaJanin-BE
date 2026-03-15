@@ -15,6 +15,13 @@
       "when": 1773404787768,
       "tag": "0001_far_onslaught",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1773560554661,
+      "tag": "0002_faithful_darkstar",
+      "breakpoints": true
     }
   ]
 }

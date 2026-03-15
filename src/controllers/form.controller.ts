@@ -9,7 +9,7 @@ export class FormController {
         reply: FastifyReply,
     ) {
         try {
-            const userId = request.user.id;
+            const userId = request.user.sub;
             const input = request.body;
 
             const result = await formService.submitOnboardingForm(userId, input);
@@ -25,6 +25,7 @@ export class FormController {
                     completed: true,
                 },
             });
+            
         } catch (error) {
             const errorMessage =
                 error instanceof Error ? error.message : "An error occurred";

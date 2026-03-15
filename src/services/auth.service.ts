@@ -18,6 +18,7 @@ export interface userResponse {
     id: string;
     fullName: string;
     email: string;
+    role: string;
 }
 
 export class AuthService {
@@ -42,7 +43,8 @@ export class AuthService {
         .returning({ 
             id: users.id,
             fullName: users.full_name,
-            email: users.email
+            email: users.email,
+            role: users.role
         });
 
         return newUser!;
@@ -56,7 +58,7 @@ export class AuthService {
             .limit(1);
 
         if (!user) {
-            throw new Error("Invalid credentials");
+            throw new Error("User not found");
         }
 
         const isPasswordValid = await bcrypt.compare(input.password, user.password);
@@ -64,7 +66,7 @@ export class AuthService {
             throw new Error("Invalid credentials");
         }
 
-        return { id: user.id, fullName: user.full_name, email: user.email };
+        return { id: user.id, fullName: user.full_name, email: user.email, role: user.role };
     }
     
 }

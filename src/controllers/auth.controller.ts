@@ -1,6 +1,13 @@
 import { FastifyRequest, FastifyReply, FastifyInstance } from "fastify";
 import { authService, loginInput, registerInput } from "../services/auth.service.js";
+import config from "dotenv/config";
 
+
+const jwtExp = process.env.JWT_EXPIRATION as string;
+
+if (!jwtExp) {
+    throw new Error("JWT_EXPIRATION environment variable is required");
+}
 
 export function buildAuthController(fastify: FastifyInstance) {
     return {
@@ -36,8 +43,8 @@ export function buildAuthController(fastify: FastifyInstance) {
                 const user = await authService.verifyUserCredentials(input);
 
                 const token = fastify.jwt.sign(
-                    { id: user.id },
-                    { expiresIn: "1d" },
+                    { sub: user.id, role: user.role, },
+                    { expiresIn: jwtExp }
                 );
 
                 return reply.status(200).send({
