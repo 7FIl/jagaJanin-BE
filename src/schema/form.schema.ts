@@ -3,7 +3,7 @@ export const onboardingFormSchema = {
 		type: "object",
 		required: [
 			"foodPreference",
-			"activityLevelId",
+			"activityLevel",
 			"weeks",
 			"height",
 			"weight",
@@ -13,7 +13,7 @@ export const onboardingFormSchema = {
 		additionalProperties: false,
 		properties: {
 			foodPreference: { type: "string", minLength: 1 },
-			activityLevelId: { type: "integer", minimum: 1 },
+			activityLevel: { type: "integer", minimum: 1 },
 			weeks: { type: "integer", minimum: 1, maximum: 45 },
 			height: { type: "number", exclusiveMinimum: 0 },
 			weight: { type: "number", exclusiveMinimum: 0 },

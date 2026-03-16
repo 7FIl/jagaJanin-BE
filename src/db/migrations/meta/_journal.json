@@ -5,22 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1773323831206,
-      "tag": "0000_dusty_korg",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1773404787768,
-      "tag": "0001_far_onslaught",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1773560554661,
-      "tag": "0002_faithful_darkstar",
+      "when": 1773647543841,
+      "tag": "0000_simple_wild_pack",
       "breakpoints": true
     }
   ]

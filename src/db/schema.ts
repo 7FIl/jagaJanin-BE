@@ -11,12 +11,6 @@ export const users = pgTable("users", {
     updated_at: timestamp("updated_at").notNull().defaultNow(),
 });
 
-export const activity_level = pgTable("activity_level", {
-    id: serial("id").primaryKey().notNull(),
-    frequency: varchar("frequency", { length: 50 }).notNull(),
-    multiplier: decimal("multiplier", { precision: 5, scale: 2 }).notNull(),
-});
-
 export const serving = pgTable("serving", {
     id: serial("id").primaryKey().notNull(),
     description: varchar("description", { length: 100 }).notNull(),
@@ -28,7 +22,7 @@ export const serving = pgTable("serving", {
 });
 
 export const foods = pgTable("foods", {
-    id: uuid("id").primaryKey().defaultRandom(),
+    id: serial("id").primaryKey().notNull(),
     serving_id: integer("serving_id").notNull().references(() => serving.id),
     category: integer("category").notNull(),
     name: varchar("name", { length: 100 }).notNull(),
@@ -36,9 +30,9 @@ export const foods = pgTable("foods", {
 });
 
 export const meal_log = pgTable("meal_log", {
-    Id: uuid("id").primaryKey().defaultRandom(),
+    id: uuid("id").primaryKey().defaultRandom(),
     user_id: uuid("user_id").notNull().references(() => users.id),
-    food_id: uuid("food_id").notNull().references(() => foods.id),
+    food_id: integer("food_id").notNull().references(() => foods.id),
     created_at: timestamp("created_at").notNull().defaultNow(),
     updated_at: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -46,8 +40,8 @@ export const meal_log = pgTable("meal_log", {
 export const pregnancy_profile = pgTable("pregnancy_profile", {
     id: uuid("id").primaryKey().defaultRandom(),
     user_id: uuid("user_id").notNull().references(() => users.id),
-    food_preference: uuid("food_preference").notNull().references(() => foods.id),
-    activity_level_id: integer("activity_level_id").notNull().references(() => activity_level.id),
+    food_preference: integer("food_preference").notNull().references(() => foods.id),
+    activity_level: integer("activity_level").notNull(),
     weeks: integer("weeks").notNull(),
     height: decimal("height", { precision: 5, scale: 2 }).notNull(),
     weight: decimal("weight", { precision: 5, scale: 2 }).notNull(),    
