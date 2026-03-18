@@ -20,3 +20,13 @@ export const loginSchema = {
         }
     }
 };
+
+export const refreshTokenSchema = {
+    body: {
+        type: "object",
+        required: ["refreshToken"],
+        properties: {
+            refreshToken: { type: "string" }
+        }
+    }
+};

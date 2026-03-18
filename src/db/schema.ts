@@ -51,4 +51,12 @@ export const pregnancy_profile = pgTable("pregnancy_profile", {
     daily_calories: integer("daily_calories").notNull(),
     meal_calories: integer("meal_calories").notNull(),
 });
+
+export const refresh_tokens = pgTable("refresh_tokens", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    user_id: uuid("user_id").notNull().references(() => users.id),
+    token: varchar("token", { length: 255 }).notNull(),
+    expires_at: timestamp("expires_at").notNull(),
+    created_at: timestamp("created_at").notNull().defaultNow(),
+});
     

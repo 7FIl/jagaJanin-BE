@@ -4,7 +4,7 @@ import { checkDatabaseConnection } from "./db/index.js";
 import { authroutes } from "./routes/auth.routes.js";
 import { formRoutes } from "./routes/form.routes.js";
 import { authPlugin } from "./plugins/auth.plugins.js";
-import config from "dotenv/config";
+import "dotenv/config";
 
 const app = fastify();
 

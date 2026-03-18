@@ -1,13 +1,5 @@
 import { FastifyRequest, FastifyReply, FastifyInstance } from "fastify";
-import { authService, loginInput, registerInput } from "../services/auth.service.js";
-import config from "dotenv/config";
-
-
-const jwtExp = process.env.JWT_EXPIRATION as string;
-
-if (!jwtExp) {
-    throw new Error("JWT_EXPIRATION environment variable is required");
-}
+import { authService, loginInput, registerInput} from "../services/auth.service.js";
 
 export function buildAuthController(fastify: FastifyInstance) {
     return {
@@ -41,15 +33,13 @@ export function buildAuthController(fastify: FastifyInstance) {
 
             try {
                 const user = await authService.verifyUserCredentials(input);
-
-                const token = fastify.jwt.sign(
-                    { sub: user.id, role: user.role, },
-                    { expiresIn: jwtExp }
-                );
+                await authService.revokeRefreshToken(user.id);
+                const accessToken = await authService.generateAccessToken(user, fastify);
+                const refreshToken = await authService.generateRefreshToken(user.id);                
 
                 return reply.status(200).send({
                     success: true,
-                    data: { user, token },
+                    data: { user, authorization: { accessToken, refreshToken } },
                     message: "User logged in successfully",
                 });
                 
@@ -63,5 +53,29 @@ export function buildAuthController(fastify: FastifyInstance) {
                 });
             }
         },
+
+        async refreshToken(
+            request: FastifyRequest<{ Body: { refreshToken: string } }>,
+            reply: FastifyReply,
+        ) {
+            const input = request.body;
+
+            try {
+                const { accessToken, refreshToken } = await authService.rotateRefreshToken(input.refreshToken, fastify);
+
+                return reply.status(200).send({
+                    success: true,
+                    data: { accessToken, refreshToken },
+                    message: "Access token refreshed successfully",
+                });
+            } catch (error) {
+                const errorMessage =
+                    error instanceof Error ? error.message : "An error occurred";
+                return reply.status(401).send({
+                    success: false,
+                    message: errorMessage,
+                });
+            }
+        }
     };
 }
