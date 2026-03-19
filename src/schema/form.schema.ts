@@ -18,6 +18,7 @@ export const onboardingFormSchema = {
 			weight: { type: "number", exclusiveMinimum: 0 },
 			age: { type: "integer", minimum: 10, maximum: 65 },
 			mealPerDay: { type: "integer", minimum: 1, maximum: 12 },
-		}
+		},
+		additionalProperties: false
 	}
 };

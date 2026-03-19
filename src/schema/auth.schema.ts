@@ -6,7 +6,8 @@ export const registerSchema = {
             fullName: { type: "string", minLength: 2 },
             email: { type: "string", format: "email" },
             password: { type: "string", minLength: 6 }
-        }
+        },
+        additionalProperties: false
     }
 };
 
@@ -17,7 +18,8 @@ export const loginSchema = {
         properties: {
             email: { type: "string", format: "email" },
             password: { type: "string" }
-        }
+        },
+        additionalProperties: false
     }
 };
 
@@ -27,6 +29,7 @@ export const refreshTokenSchema = {
         required: ["refreshToken"],
         properties: {
             refreshToken: { type: "string" }
-        }
+        },
+        additionalProperties: false
     }
 };
