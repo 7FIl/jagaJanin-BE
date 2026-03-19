@@ -2,7 +2,7 @@ import { FastifyInstance } from "fastify";
 import { buildAuthController } from "../controllers/auth.controller.js";
 import { loginSchema, refreshTokenSchema, registerSchema } from "../schema/auth.schema.js";
 
-export async function authroutes(fastify: FastifyInstance) {
+export async function authRoutes(fastify: FastifyInstance) {
     const controller = buildAuthController(fastify);
 
     fastify.post("/register", { schema: registerSchema }, controller.register);
