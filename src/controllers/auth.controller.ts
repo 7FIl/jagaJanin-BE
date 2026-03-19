@@ -39,7 +39,7 @@ export function buildAuthController(fastify: FastifyInstance) {
 
                 return reply.status(200).send({
                     success: true,
-                    data: { user, authorization: { accessToken, refreshToken } },
+                    data: { user, accessToken, refreshToken },
                     message: "User logged in successfully",
                 });
                 
@@ -72,6 +72,27 @@ export function buildAuthController(fastify: FastifyInstance) {
                 const errorMessage =
                     error instanceof Error ? error.message : "An error occurred";
                 return reply.status(401).send({
+                    success: false,
+                    message: errorMessage,
+                });
+            }
+        },
+
+        async logout(
+            request: FastifyRequest,
+            reply: FastifyReply,
+        ) {
+            try {
+                const userId = request.user.sub;
+                await authService.revokeRefreshToken(userId)
+                return reply.status(200).send({
+                    success: true,
+                    message: "User logged out successfully",
+                });
+            } catch (error)             {
+                const errorMessage =
+                    error instanceof Error ? error.message : "An error occurred";
+                return reply.status(500).send({
                     success: false,
                     message: errorMessage,
                 });

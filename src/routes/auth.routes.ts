@@ -8,4 +8,5 @@ export async function authroutes(fastify: FastifyInstance) {
     fastify.post("/register", { schema: registerSchema }, controller.register);
     fastify.post("/login", { schema: loginSchema }, controller.login);
     fastify.post("/refresh-token", { schema: refreshTokenSchema }, controller.refreshToken);
+    fastify.post("/logout", { onRequest: [fastify.authenticate] }, controller.logout);
 }
