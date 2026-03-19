@@ -1,5 +1,6 @@
 import fastify from "fastify";
 import fastifyJwt from "@fastify/jwt";
+import multipart from "@fastify/multipart";
 import { checkDatabaseConnection } from "./db/index.js";
 import { authRoutes } from "./routes/auth.routes.js";
 import { formRoutes } from "./routes/form.routes.js";
@@ -20,7 +21,13 @@ if (!PORT) {
 }
 
 app.register(fastifyJwt, {
-    secret: jwtSecret
+  secret: jwtSecret
+});
+
+await app.register(multipart,{
+  limits: {
+    fileSize: 2 * 1024 * 1024,
+  },
 });
 
 app.register(authPlugin);

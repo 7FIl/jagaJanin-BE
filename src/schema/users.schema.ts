@@ -3,9 +3,8 @@ import { min } from "drizzle-orm";
 export const updateUserProfileSchema = {
     body: {
         type: "object",
-        required: [],
         properties: {
-            fullName: { type: "string" },
+            fullName: { type: "string", minLength: 2 },
             email: { type: "string", format: "email" },
             password: { type: "string", minLength: 6 }
         },
@@ -35,4 +34,8 @@ export const updatePreferenceSchema = {
         },
         additionalProperties: false
     }
+};
+
+export const updateAvatarSchema = {
+    consumes: ["multipart/form-data"],
 };

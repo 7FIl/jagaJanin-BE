@@ -1,4 +1,4 @@
-import { boolean, decimal, integer, pgTable, serial, timestamp, uuid, varchar, } from "drizzle-orm/pg-core";
+import { boolean, decimal, integer, pgTable, serial, text, timestamp, uuid, varchar, } from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
     id: uuid("id").primaryKey().defaultRandom(),
@@ -6,6 +6,7 @@ export const users = pgTable("users", {
     email: varchar("email", { length: 100 }).notNull().unique(),
     password: varchar("password", { length: 255 }).notNull(),
     role: varchar("role", { length: 50 }).notNull().default("user"),
+    avatar_url: text("avatar_url").notNull().default("empty"),
     complete_onboarding: boolean("complete_onboarding").notNull().default(false),
     created_at: timestamp("created_at").notNull().defaultNow(),
     updated_at: timestamp("updated_at").notNull().defaultNow(),

@@ -1,11 +1,13 @@
 import { db } from "../db/index.js";
 import { pregnancy_profile, users } from "../db/schema.js";
 import { eq } from "drizzle-orm";
+import { supabase } from "../lib/supabase.js";
 import bcrypt from "bcrypt";
 
 export interface userProfileResponse {
     fullName: string;
     email: string;
+    avatarUrl?: string | undefined;
 }
 
 export interface updateProfileInput {
@@ -22,7 +24,7 @@ export interface updatePasswordInput {
 
 export class UsersService {
 
-    async UserProfile(userId: string): Promise<userProfileResponse> {
+    async userProfile(userId: string): Promise<userProfileResponse> {
 
         const [user] = await db
         .select()
@@ -32,6 +34,14 @@ export class UsersService {
 
         if (!user) {
             throw new Error("User not found");
+        }
+
+        if (user.avatar_url !== "empty") {
+            const { data } = await supabase.storage
+                .from("avatars")
+                .createSignedUrl(user.avatar_url, 60 * 60);
+
+        return { fullName: user.full_name, email: user.email, avatarUrl: data?.signedUrl };
         }
 
         return { fullName: user.full_name, email: user.email };
@@ -69,10 +79,10 @@ export class UsersService {
     }
 
     async updateUserProfile(userId: string, fullName?: string, email?: string, password?: string): Promise<userProfileResponse> {
-
+    
         const [updatedUser] = await db
             .update(users)
-            .set({ full_name: fullName, email})
+            .set({ full_name: fullName, updated_at: new Date() })
             .where(eq(users.id, userId))
             .returning({ fullName: users.full_name, email: users.email })
 
@@ -80,8 +90,12 @@ export class UsersService {
             throw new Error("User not found");
         }
 
-        if (email !== undefined && password == undefined){
+        if (email !== undefined && password === undefined){
             throw new Error("Password is required to change email");
+        }
+
+        if (email === undefined && password !== undefined) {
+            throw new Error("Email is required to change password");
         }
 
         if (email !== undefined && password !== undefined) {
@@ -113,22 +127,13 @@ export class UsersService {
 
         await db
             .update(users)
-            .set({ password: hashedNewPassword })
+            .set({ password: hashedNewPassword , updated_at: new Date() })
             .where(eq(users.id, userId));
         
         return true;
     }
 
     async updatePreference (userId: string, foodPreference: number): Promise<boolean> {
-        const [user] = await db
-            .select()
-            .from(pregnancy_profile)
-            .where(eq(pregnancy_profile.user_id, userId))
-            .limit(1);
-
-        if (!user) {
-            throw new Error("User not found");
-        }
 
         const [foodPrefExists] = await db
             .select()
@@ -145,6 +150,51 @@ export class UsersService {
             .set({ food_preference: foodPreference })
             .where(eq(pregnancy_profile.user_id, userId));
 
+        return true;
+    }
+
+    async updateAvatar(userId: string, file: any): Promise<boolean> {
+        
+        const [user] = await db
+            .select()
+            .from(users)
+            .where(eq(users.id, userId))
+            .limit(1);
+
+        if (user!.avatar_url !== "empty") {
+
+            await supabase.storage
+                .from("avatars")
+                .remove([user!.avatar_url]);
+        }
+        
+        if (!file) {
+            throw new Error("No file uploaded");
+        }
+        
+        if (!file.mimetype.startsWith("image/")) {
+            throw new Error("Invalid file type. Only images are allowed.");
+        }
+            
+        const buffer = await file.toBuffer();
+        const extension = file.filename.split('.').pop();
+        const filePath = `avatars/${userId}.${Date.now()}.${extension}`;
+        const { error } = await supabase.storage
+            .from("avatars")
+            .upload(filePath, buffer, {
+                    contentType: file.mimetype,
+                    upsert: false,
+                });
+
+        if (error) {
+            throw new Error(error.message);
+        }
+
+        await db.
+            update(users)
+            .set({ avatar_url: filePath, updated_at: new Date() })
+            .where(eq(users.id, userId));
+        
         return true;
 
     }

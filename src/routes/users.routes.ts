@@ -1,7 +1,7 @@
 import { FastifyInstance } from "fastify";
 import { usersController } from "../controllers/users.controller.js";
 import { updatePasswordInput, updateProfileInput } from "../services/users.service.js";
-import { updatePasswordSchema, updateUserProfileSchema, updatePreferenceSchema } from "../schema/users.schema.js";
+import { updatePasswordSchema, updateUserProfileSchema, updatePreferenceSchema} from "../schema/users.schema.js";
 
 export async function usersRoutes(fastify: FastifyInstance) {
 
@@ -19,4 +19,6 @@ export async function usersRoutes(fastify: FastifyInstance) {
         "/password", 
         { onRequest: [fastify.authenticate], schema: updatePasswordSchema }, 
             usersController.updatePassword);
+    fastify.patch("/avatar", 
+        { onRequest: [fastify.authenticate]}, usersController.updateAvatar);
 }

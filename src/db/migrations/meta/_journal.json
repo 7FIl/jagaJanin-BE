@@ -15,6 +15,13 @@
       "when": 1773843564808,
       "tag": "0001_shallow_marvel_boy",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1773937488587,
+      "tag": "0002_demonic_skin",
+      "breakpoints": true
     }
   ]
 }
