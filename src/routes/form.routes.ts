@@ -9,5 +9,5 @@ export async function formRoutes(fastify: FastifyInstance) {
     fastify.post<{ Body: formInput }>(
         "/onboarding",
         { onRequest: [fastify.authenticate], schema: onboardingFormSchema },
-        formController.onboardingForm );
+            formController.onboardingForm );
 }

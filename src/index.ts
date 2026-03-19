@@ -1,10 +1,11 @@
 import fastify from "fastify";
 import fastifyJwt from "@fastify/jwt";
 import { checkDatabaseConnection } from "./db/index.js";
-import { authroutes } from "./routes/auth.routes.js";
+import { authRoutes } from "./routes/auth.routes.js";
 import { formRoutes } from "./routes/form.routes.js";
 import { authPlugin } from "./plugins/auth.plugins.js";
 import "dotenv/config";
+import { usersRoutes } from "./routes/users.routes.js";
 
 const app = fastify();
 
@@ -35,10 +36,11 @@ app.get("/health", async (request, reply) => {
     return { status: 'unhealthy', database: 'disconnected' };
 });
 
-app.register(authroutes, { prefix: "/api/v1/auth" });
+app.register(authRoutes, { prefix: "/api/v1/auth" });
 app.register(formRoutes, { prefix: "/api/v1/forms" });
+app.register(usersRoutes, { prefix: "/api/v1/users" });
 
-app.listen({ port: PORT as unknown as number }, (err, address) => {
+app.listen({ port: Number(PORT) }, (err, address) => {
   if (err) {
     console.error("Failed to start server:", err);
     app.log.error(err);
