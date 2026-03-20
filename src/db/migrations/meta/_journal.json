@@ -22,6 +22,20 @@
       "when": 1773937488587,
       "tag": "0002_demonic_skin",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1773993859134,
+      "tag": "0003_gray_the_hunter",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1773994489467,
+      "tag": "0004_clumsy_millenium_guard",
+      "breakpoints": true
     }
   ]
 }

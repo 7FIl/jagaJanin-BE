@@ -198,6 +198,23 @@ export class UsersService {
         return true;
 
     }
+
+    async avatarUrl(userId: string): Promise<string> {
+        const [user] = await db
+            .select()
+            .from(users)
+            .where(eq(users.id, userId))
+            .limit(1);
+        
+        if (user!.avatar_url !== "empty") {
+            return user!.avatar_url;
+        }
+            const { data } = await supabase.storage            
+            .from("avatars")
+            .createSignedUrl(`avatars/${user!.avatar_url}`, 60 * 60)
+
+        return data!.signedUrl;
+    }
 }
 
 export const usersService = new UsersService();

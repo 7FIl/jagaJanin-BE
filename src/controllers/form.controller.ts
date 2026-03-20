@@ -21,7 +21,12 @@ export function buildFormController(fastify: FastifyInstance) {
                     success: true,
                     message: "Onboarding form submitted successfully",
                     data: {
-                        completed: true,
+                        name: result!.name,
+                        age: result!.age,
+                        trimester: result!.trimester,
+                        aktivitas: result!.aktivitas,
+                        dailyCalories: result!.calories,
+                        mealRecommendation: result!.mealRecommendation
                     },
                 });
                 

@@ -17,8 +17,8 @@ export const serving = pgTable("serving", {
     description: varchar("description", { length: 100 }).notNull(),
     gram: integer("gram").notNull(),
     calories: integer("calories").notNull(),
-    fat: integer("fat").notNull(),
-    protein: integer("protein").notNull(),
+    fat: decimal("fat", { precision: 5, scale: 2 }).notNull(),
+    protein: decimal("protein", { precision: 5, scale: 2 }).notNull(),
     price: integer("price").notNull(),
 });
 
@@ -27,13 +27,13 @@ export const foods = pgTable("foods", {
     serving_id: integer("serving_id").notNull().references(() => serving.id),
     category: integer("category").notNull(),
     name: varchar("name", { length: 100 }).notNull(),
-    quantity: integer("quantity").notNull(),
 });
 
 export const meal_log = pgTable("meal_log", {
     id: uuid("id").primaryKey().defaultRandom(),
     user_id: uuid("user_id").notNull().references(() => users.id),
     food_id: integer("food_id").notNull().references(() => foods.id),
+    quantity: integer("quantity").notNull(),
     created_at: timestamp("created_at").notNull().defaultNow(),
     updated_at: timestamp("updated_at").notNull().defaultNow(),
 });
