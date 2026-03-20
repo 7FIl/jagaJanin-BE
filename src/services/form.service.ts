@@ -1,7 +1,7 @@
 import { db } from "../db/index.js";
 import { foods, pregnancy_profile, users, serving } from "../db/schema.js";
 import { eq } from "drizzle-orm";
-import { getUserid } from "./users.service.js";
+import { getUserId } from "./users.service.js";
 
 export interface formInput {
     foodPreference: number;
@@ -60,7 +60,7 @@ const activityMultiplier = (activityLevel: number): number => {
     }
 }
 
-const calculateTrimester = (weeks: number): number => {
+export const calculateTrimester = (weeks: number): number => {
     if (weeks <= 13) {
         return 1;
     } else if (weeks <= 27) {
@@ -82,7 +82,7 @@ const activityLevelToString = (activityLevel: number): string => {
     }
 }
 
-async function mealRecomendation(mealCalories: number, foodPreferenceId: number): Promise<mealRecomendationResponse> {
+export async function mealRecomendation(mealCalories: number, foodPreferenceId: number): Promise<mealRecomendationResponse> {
 
     const caloriesPerMeal = mealCalories;
 
@@ -105,7 +105,6 @@ async function mealRecomendation(mealCalories: number, foodPreferenceId: number)
             throw new Error(`No foods found for category ${category}`);
         }
 
-        // Find the food that best meets or slightly exceeds target calories
         let bestMatch = availableFoods[0];
         if (!bestMatch) {
             throw new Error(`No best match found for category ${category}`);
@@ -133,7 +132,6 @@ async function mealRecomendation(mealCalories: number, foodPreferenceId: number)
         };
     };
 
-    // Helper function to get food by ID with serving calories
     const getFoodById = async (foodId: number, targetCalories: number) => {
         const foodData = await db
             .select({
@@ -174,13 +172,10 @@ async function mealRecomendation(mealCalories: number, foodPreferenceId: number)
     };
 }
     
-
-
-
 export class FormService {
 
     async submitOnboardingForm(id: string, input: formInput): Promise<formResponse> {
-        const user = await getUserid(id);
+        const user = await getUserId(id);
 
         if (user.complete_onboarding) {
             throw new Error("Onboarding form already completed");
