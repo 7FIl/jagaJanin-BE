@@ -110,6 +110,27 @@ export class UsersController {
         }
     }
 
+    async getAvatar(
+        request: FastifyRequest,
+        reply: FastifyReply) {
+        try {
+            const userId = request.user.sub;
+            const avatarUrl = await usersService.avatarUrl(userId);
+            return reply.status(200).send({
+                success: true,
+                data: { avatarUrl },
+                message: "Avatar URL retrieved successfully",
+            });
+        } catch (error) {
+            const errorMessage = 
+                error instanceof Error ? error.message : "An error occurred";
+            return reply.status(400).send({
+                success: false,
+                message: errorMessage,
+            });
+        }
+    }
+
 }
 
 export const usersController = new UsersController();

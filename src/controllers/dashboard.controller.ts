@@ -7,9 +7,13 @@ export class DashboardController {
         reply: FastifyReply,
         ){
         try {
-            const userId = request.user.id;
+            const userId = request.user.sub;
             const dashboardData = await dashboardService.getDashboardData(userId);
-            return reply.code(200).send(dashboardData);
+            return reply.code(200).send({
+                success: true,
+                data: dashboardData,
+                message: "Dashboard data retrieved successfully"
+            });
         } catch (error) {
             if (error instanceof Error) {
                 return reply.code(400).send({ error: error.message });
@@ -23,9 +27,13 @@ export class DashboardController {
         reply: FastifyReply,
         ){
         try {
-            const userId = request.user.id;
+            const userId = request.user.sub;
             const mealRecommendations = await dashboardService.getMealRecommendations(userId);
-            return reply.code(200).send(mealRecommendations);
+            return reply.code(200).send({
+                success: true,
+                data: mealRecommendations,
+                message: "Meal recommendations retrieved successfully"
+            });
         } catch (error) {
             if (error instanceof Error) {
                 return reply.code(400).send({ error: error.message });
@@ -39,9 +47,13 @@ export class DashboardController {
         reply: FastifyReply,
         ){
         try {
-            const userId = request.user.id;
+            const userId = request.user.sub;
             const dailyProgress = await dashboardService.dailyProgress(userId);
-            return reply.code(200).send(dailyProgress);
+            return reply.code(200).send({
+                success: true,
+                data: dailyProgress,
+                message: "Daily progress retrieved successfully"
+            });
         } catch (error) {
             if (error instanceof Error) {
                 return reply.code(400).send({ error: error.message });
@@ -55,9 +67,13 @@ export class DashboardController {
         reply: FastifyReply,
         ){
         try {
-            const userId = request.user.id;
+            const userId = request.user.sub;
             const weeklyProgress = await dashboardService.weeklyProgress(userId);
-            return reply.code(200).send(weeklyProgress);
+            return reply.code(200).send({
+                success: true,
+                data: weeklyProgress,
+                message: "Weekly progress retrieved successfully"
+            });
         } catch (error) {
             if (error instanceof Error) {
                 return reply.code(400).send({ error: error.message });
@@ -67,3 +83,5 @@ export class DashboardController {
     }
 
 }
+
+export const dashboardController = new DashboardController();

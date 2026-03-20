@@ -13,7 +13,7 @@ export interface formInput {
     mealPerDay: number;
 }
 
-export interface formResponse {
+interface formResponse {
     name: string;
     age: number;
     trimester: number;
@@ -29,6 +29,15 @@ export interface mealRecomendationResponse {
     laukQty: number;
     sayurName: string;
     sayurQty: number;
+}
+
+interface onboardingResponse {
+    name: string;
+    age: number;
+    trimester: number;
+    aktivitas: string;
+    calories: number;
+    mealRecommendation: mealRecomendationResponse;
 }
 
 const getPregnancyCalorieAdjustment = (weeks: number): number => {
@@ -174,7 +183,7 @@ export async function mealRecomendation(mealCalories: number, foodPreferenceId: 
     
 export class FormService {
 
-    async submitOnboardingForm(id: string, input: formInput): Promise<formResponse> {
+    async submitOnboardingForm(id: string, input: formInput): Promise<onboardingResponse> {
         const user = await getUserId(id);
 
         if (user.complete_onboarding) {

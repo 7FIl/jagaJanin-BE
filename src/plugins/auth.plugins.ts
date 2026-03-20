@@ -1,7 +1,7 @@
 // src/plugins/auth.plugin.ts
 import "@fastify/jwt";
 import fp from "fastify-plugin";
-import fastify, { FastifyRequest, FastifyReply } from "fastify";
+import { FastifyRequest, FastifyReply } from "fastify";
 
 export const authPlugin = fp(async (fastify) => {
     

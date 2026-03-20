@@ -1,5 +1,5 @@
 import { db } from "../db/index.js";
-import { pregnancy_profile, users } from "../db/schema.js";
+import { foods, pregnancy_profile, users } from "../db/schema.js";
 import { eq } from "drizzle-orm";
 import { supabase } from "../lib/supabase.js";
 import bcrypt from "bcrypt";
@@ -21,7 +21,7 @@ export interface updatePasswordInput {
     newPassword: string;
 }
 
-export async function getUserid(id: string) {
+export async function getUserId(id: string) {
     const [user] = await db
         .select()
         .from(users)
@@ -39,7 +39,7 @@ export async function getUserid(id: string) {
 export class UsersService {
 
     async userProfile(userId: string): Promise<userProfileResponse> {
-        const user = await getUserid(userId);
+        const user = await getUserId(userId);
 
         if (user.avatar_url !== "empty") {
             const { data } = await supabase.storage
@@ -53,7 +53,7 @@ export class UsersService {
     }
 
     async updateEmail(userId: string, email: string,password: string): Promise<string> {
-        const user = await getUserid(userId);
+        const user = await getUserId(userId);
 
         const isPasswordValid = await bcrypt.compare(password, user.password);
 
@@ -76,7 +76,7 @@ export class UsersService {
     }
 
     async updateUserProfile(userId: string, fullName?: string, email?: string, password?: string): Promise<userProfileResponse> {
-    
+            
         const [updatedUser] = await db
             .update(users)
             .set({ full_name: fullName, updated_at: new Date() })
@@ -104,7 +104,7 @@ export class UsersService {
     }
 
     async editPassword(userId: string, currentPassword: string, newPassword: string): Promise<boolean> {
-        const user = await getUserid(userId);
+        const user = await getUserId(userId);
 
         const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
 
@@ -126,8 +126,8 @@ export class UsersService {
 
         const [foodPrefExists] = await db
             .select()
-            .from(pregnancy_profile)
-            .where(eq(pregnancy_profile.food_preference, foodPreference))
+            .from(foods)
+            .where(eq(foods.id, foodPreference))
             .limit(1);
 
         if (!foodPrefExists) {
@@ -144,7 +144,7 @@ export class UsersService {
 
     async updateAvatar(userId: string, file: any): Promise<boolean> {
         
-        const user = await getUserid(userId);
+        const user = await getUserId(userId);
 
         if (user.avatar_url !== "empty") {
             await supabase.storage
@@ -184,15 +184,15 @@ export class UsersService {
     }
 
     async avatarUrl(userId: string): Promise<string> {
-        const user = await getUserid(userId);
+        const user = await getUserId(userId);
         
-        if (user.avatar_url !== "empty") {
+        if (user.avatar_url === "empty") {
             return user.avatar_url;
         }
 
         const { data } = await supabase.storage            
             .from("avatars")
-            .createSignedUrl(`avatars/${user.avatar_url}`, 60 * 60);
+            .createSignedUrl(user.avatar_url, 60 * 60);
 
         if (!data) {
             throw new Error("Failed to generate signed URL");

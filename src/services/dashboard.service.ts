@@ -228,7 +228,6 @@ export class DashboardService {
             });
         }
 
-        // Calculate total calories for the week
         const totalCalories = Object.values(caloriesByDay).reduce((sum, calories) => sum + calories, 0);
 
         return {

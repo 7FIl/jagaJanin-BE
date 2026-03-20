@@ -8,21 +8,30 @@ export function buildAuthController(fastify: FastifyInstance) {
             reply: FastifyReply,
         ) {
             const input = request.body;
+            try {
+                const existingUser = await authService.checkUserExists(input.email);
+                if (existingUser) {
+                    return reply.status(409).send({
+                        success: false,
+                        message: "Email already in use",
+                    });
+                }
 
-            const existingUser = await authService.checkUserExists(input.email);
-            if (existingUser) {
-                return reply.status(409).send({
+                const newUser = await authService.createNewUser(input);
+                return reply.status(201).send({
+                    success: true,
+                    data: newUser,
+                    message: "User registered successfully",
+                });
+
+            } catch (error) {
+                const errorMessage =
+                    error instanceof Error ? error.message : "An error occurred";
+                return reply.status(500).send({
                     success: false,
-                    message: "Email already in use",
+                    message: errorMessage,
                 });
             }
-
-            const newUser = await authService.createNewUser(input);
-            return reply.status(201).send({
-                success: true,
-                data: newUser,
-                message: "User registered successfully",
-            });
         },
 
         async login(
@@ -30,7 +39,6 @@ export function buildAuthController(fastify: FastifyInstance) {
             reply: FastifyReply,
         ) {
             const input = request.body;
-
             try {
                 const user = await authService.verifyUserCredentials(input);
                 await authService.revokeRefreshToken(user.id);

@@ -1,5 +1,3 @@
-import { min } from "drizzle-orm";
-
 export const updateUserProfileSchema = {
     body: {
         type: "object",
@@ -34,8 +32,4 @@ export const updatePreferenceSchema = {
         },
         additionalProperties: false
     }
-};
-
-export const updateAvatarSchema = {
-    consumes: ["multipart/form-data"],
 };
