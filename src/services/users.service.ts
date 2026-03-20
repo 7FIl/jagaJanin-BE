@@ -21,20 +21,25 @@ export interface updatePasswordInput {
     newPassword: string;
 }
 
+export async function getUserid(id: string) {
+    const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, id))
+        .limit(1);
+
+    if (!user) {
+        throw new Error("User not found");
+    }
+
+    return user;
+}
+
 
 export class UsersService {
 
     async userProfile(userId: string): Promise<userProfileResponse> {
-
-        const [user] = await db
-        .select()
-        .from(users)
-        .where(eq(users.id, userId))
-        .limit(1);
-
-        if (!user) {
-            throw new Error("User not found");
-        }
+        const user = await getUserid(userId);
 
         if (user.avatar_url !== "empty") {
             const { data } = await supabase.storage
@@ -48,15 +53,7 @@ export class UsersService {
     }
 
     async updateEmail(userId: string, email: string,password: string): Promise<string> {
-        const [user] = await db
-            .select()
-            .from(users)
-            .where(eq(users.id, userId))
-            .limit(1);
-        
-        if (!user) {
-            throw new Error("User not found");
-        }
+        const user = await getUserid(userId);
 
         const isPasswordValid = await bcrypt.compare(password, user.password);
 
@@ -71,7 +68,7 @@ export class UsersService {
         .returning({ fullName: users.full_name, email: users.email })
 
         if (!updatedUser) {
-            throw new Error("User not found");
+            throw new Error("Failed to update user email");
         }
 
         return updatedUser.email;
@@ -107,15 +104,7 @@ export class UsersService {
     }
 
     async editPassword(userId: string, currentPassword: string, newPassword: string): Promise<boolean> {
-        const [user] = await db
-            .select()
-            .from(users)
-            .where(eq(users.id, userId))
-            .limit(1);
-        
-        if (!user) {
-            throw new Error("User not found");
-        }
+        const user = await getUserid(userId);
 
         const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
 
@@ -155,17 +144,12 @@ export class UsersService {
 
     async updateAvatar(userId: string, file: any): Promise<boolean> {
         
-        const [user] = await db
-            .select()
-            .from(users)
-            .where(eq(users.id, userId))
-            .limit(1);
+        const user = await getUserid(userId);
 
-        if (user!.avatar_url !== "empty") {
-
+        if (user.avatar_url !== "empty") {
             await supabase.storage
                 .from("avatars")
-                .remove([user!.avatar_url]);
+                .remove([user.avatar_url]);
         }
         
         if (!file) {
@@ -200,20 +184,21 @@ export class UsersService {
     }
 
     async avatarUrl(userId: string): Promise<string> {
-        const [user] = await db
-            .select()
-            .from(users)
-            .where(eq(users.id, userId))
-            .limit(1);
+        const user = await getUserid(userId);
         
-        if (user!.avatar_url !== "empty") {
-            return user!.avatar_url;
+        if (user.avatar_url !== "empty") {
+            return user.avatar_url;
         }
-            const { data } = await supabase.storage            
-            .from("avatars")
-            .createSignedUrl(`avatars/${user!.avatar_url}`, 60 * 60)
 
-        return data!.signedUrl;
+        const { data } = await supabase.storage            
+            .from("avatars")
+            .createSignedUrl(`avatars/${user.avatar_url}`, 60 * 60);
+
+        if (!data) {
+            throw new Error("Failed to generate signed URL");
+        }
+
+        return data.signedUrl;
     }
 }
 

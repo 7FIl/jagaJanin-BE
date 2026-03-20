@@ -1,6 +1,7 @@
 import { db } from "../db/index.js";
 import { foods, pregnancy_profile, users, serving } from "../db/schema.js";
 import { eq } from "drizzle-orm";
+import { getUserid } from "./users.service.js";
 
 export interface formInput {
     foodPreference: number;
@@ -16,7 +17,7 @@ export interface formResponse {
     name: string;
     age: number;
     trimester: number;
-    aktifitas: string;
+    aktivitas: string;
     calories: number;
     mealRecommendation: mealRecomendationResponse;
 }
@@ -179,26 +180,9 @@ async function mealRecomendation(mealCalories: number, foodPreferenceId: number)
 export class FormService {
 
     async submitOnboardingForm(id: string, input: formInput): Promise<formResponse> {
-        
-        async function checkUserOnboardingStatus(userId: string) {
-            const [user] = await db
-            .select()
-            .from(users)
-            .where(eq(users.id, userId));
+        const user = await getUserid(id);
 
-            if (!user) {
-                throw new Error("User not found");
-            }
-
-            if (user.complete_onboarding){
-                throw new Error("Onboarding form already completed");
-            }
-
-            return user
-        }
-
-        const alreadyCompleted = await checkUserOnboardingStatus(id);
-        if (alreadyCompleted.complete_onboarding) {
+        if (user.complete_onboarding) {
             throw new Error("Onboarding form already completed");
         }
 
@@ -235,10 +219,10 @@ export class FormService {
         const calories = pregnancyProfile.daily_calories;
 
         return {
-            name: alreadyCompleted.full_name,
+            name: user.full_name,
             age: pregnancyProfile.age,
             trimester: trimester,
-            aktifitas: activityLevelToString(input.activityLevel),
+            aktivitas: activityLevelToString(input.activityLevel),
             calories: calories,
             mealRecommendation: mealRecommendation
         };

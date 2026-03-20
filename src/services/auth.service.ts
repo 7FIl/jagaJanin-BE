@@ -5,6 +5,7 @@ import bcrypt from "bcrypt";
 import crypto from "crypto";
 import "dotenv/config";
 import { FastifyInstance } from "fastify";
+import { getUserId } from "./users.service.js";
 
 const jwtExp = process.env.JWT_EXPIRATION as string;
 
@@ -70,8 +71,9 @@ export class AuthService {
         if (!user) {
             throw new Error("Invalid credentials");
         }
-
+        
         const isPasswordValid = await bcrypt.compare(input.password, user.password);
+
         if (!isPasswordValid) {
             throw new Error("Invalid credentials");
         }
@@ -79,19 +81,6 @@ export class AuthService {
         return { id: user.id, fullName: user.full_name, email: user.email, role: user.role };
     }
 
-    async getUserById(userId: string): Promise<userResponse> {
-        const [user] = await db
-            .select()
-            .from(users)
-            .where(eq(users.id, userId))
-            .limit(1);
-
-        if (!user) {
-            throw new Error("User not found");
-        }
-
-        return { id: user.id, fullName: user.full_name, email: user.email, role: user.role };
-    }
 
     async generateRefreshToken(userId: string): Promise<string> {
         const tokenId = crypto.randomUUID();
@@ -111,7 +100,7 @@ export class AuthService {
         return rawToken;
     }
 
-    async generateAccessToken(user: userResponse, fastify: FastifyInstance): Promise<string> {
+    async generateAccessToken(user: { id: string, role: string }, fastify: FastifyInstance): Promise<string> {
         return fastify.jwt.sign(
             { sub: user.id, role: user.role },
             { expiresIn: jwtExp }
@@ -153,7 +142,7 @@ export class AuthService {
 
         await db.delete(refresh_tokens).where(eq(refresh_tokens.id, tokenId));
 
-        const user = await this.getUserById(userId);
+        const user = await getUserId(userId);
         const newRefreshToken = await this.generateRefreshToken(userId);
         const newAccessToken = await this.generateAccessToken(user, fastify);
 
