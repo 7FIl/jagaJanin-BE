@@ -162,12 +162,6 @@ export class UsersService {
         
         const user = await getUserId(userId);
 
-        
-        await supabase.storage
-            .from("avatars")
-            .remove([user.avatar_url]);
-
-        
         if (!file) {
             throw new Error("No file uploaded");
         }
@@ -175,21 +169,28 @@ export class UsersService {
         if (!file.mimetype.startsWith("image/")) {
             throw new Error("Invalid file type. Only images are allowed.");
         }
-            
+        
+        
         const buffer = await file.toBuffer();
         const extension = file.filename.split('.').pop();
         const filePath = `avatars/${userId}.${Date.now()}.${extension}`;
         const { error } = await supabase.storage
-            .from("avatars")
-            .upload(filePath, buffer, {
-                    contentType: file.mimetype,
-                    upsert: false,
-                });
-
+        .from("avatars")
+        .upload(filePath, buffer, {
+            contentType: file.mimetype,
+            upsert: false,
+        });
+        
         if (error) {
             throw new Error(error.message);
         }
-
+        
+        if (user.avatar_url !== "avatars/default.png") {
+            await supabase.storage
+                .from("avatars")
+                .remove([user.avatar_url]);
+        }
+        
         await db.
             update(users)
             .set({ avatar_url: filePath, updated_at: new Date() })

@@ -1,4 +1,4 @@
-# JagaJanin API Documentation v2
+# JagaJanin API Documentation v3
 
 **Base URL:** `http://localhost:{API_PORT}/api/v1`  
 **Auth:** Bearer Token (JWT) via `Authorization: Bearer <accessToken>`  
@@ -19,13 +19,15 @@ Daftarkan akun pengguna baru.
 | fullName | string | ✅ | Minimal 2 karakter |
 | email | string | ✅ | Format email valid |
 | password | string | ✅ | Minimal 6 karakter |
+| phoneNumber | string | ✅ | 10–20 karakter |
 
 **Contoh Request**
 ```json
 {
   "fullName": "Siti Rahayu",
   "email": "siti@example.com",
-  "password": "rahasia123"
+  "password": "rahasia123",
+  "phoneNumber": "08123456789"
 }
 ```
 
@@ -46,11 +48,6 @@ Daftarkan akun pengguna baru.
 **Response 409** — Email sudah terdaftar
 ```json
 { "success": false, "message": "Email already in use" }
-```
-
-**Response 500** — Error server
-```json
-{ "success": false, "message": "An error occurred" }
 ```
 
 ---
@@ -84,12 +81,12 @@ Login dan dapatkan access token + refresh token.
 }
 ```
 
-**Response 401** — Kredensial tidak valid
+**Response 401**
 ```json
 { "success": false, "message": "Invalid credentials" }
 ```
 
-> `accessToken` berlaku sesuai `JWT_EXPIRATION`. `refreshToken` berlaku **7 hari** dan dirotasi otomatis.
+> `accessToken` berlaku sesuai `JWT_EXPIRATION`. `refreshToken` berlaku **7 hari** dan dirotasi otomatis setiap digunakan.
 
 ---
 
@@ -124,18 +121,13 @@ Perbarui access token. Token lama langsung diinvalidasi (rotation).
 
 ### POST /auth/logout
 
-Logout dan hapus semua refresh token user yang aktif.
+Logout dan hapus semua refresh token aktif milik user.
 
 **Headers:** `Authorization: Bearer <accessToken>`
 
 **Response 200**
 ```json
 { "success": true, "message": "User logged out successfully" }
-```
-
-**Response 401**
-```json
-{ "success": false, "message": "Unauthorized or expired token" }
 ```
 
 ---
@@ -160,19 +152,6 @@ Submit form onboarding profil kehamilan. Hanya bisa dilakukan **satu kali** per 
 | age | integer | ✅ | Usia ibu (10–65 tahun) |
 | mealPerDay | integer | ✅ | Jumlah makan per hari (1–12) |
 
-**Contoh Request**
-```json
-{
-  "foodPreference": 2,
-  "activityLevel": 2,
-  "weeks": 20,
-  "height": 160,
-  "weight": 60,
-  "age": 28,
-  "mealPerDay": 3
-}
-```
-
 **Response 201**
 ```json
 {
@@ -196,7 +175,7 @@ Submit form onboarding profil kehamilan. Hanya bisa dilakukan **satu kali** per 
 }
 ```
 
-**Response 400** — Sudah pernah mengisi atau error validasi
+**Response 400**
 ```json
 { "success": false, "message": "Onboarding form already completed" }
 ```
@@ -209,9 +188,17 @@ Submit form onboarding profil kehamilan. Hanya bisa dilakukan **satu kali** per 
 | Daily Calories | `BMR × activityMultiplier + pregnancyAdjustment` |
 | Meal Calories | `dailyCalories ÷ mealPerDay` |
 
-**Activity Multiplier:** 1 = 1.375 · 2 = 1.55 · 3 = 1.725
+| Activity Level | Multiplier | Label |
+|----------------|-----------|-------|
+| 1 | 1.375 | jarang olahraga |
+| 2 | 1.55 | cukup aktif |
+| 3 | 1.725 | sangat aktif |
 
-**Pregnancy Adjustment:** Trimester 1 (+200 kcal) · Trimester 2 (+350 kcal) · Trimester 3 (+500 kcal)
+| Trimester | Minggu | Tambahan Kalori |
+|-----------|--------|----------------|
+| 1 | 1–13 | +200 kcal |
+| 2 | 14–27 | +350 kcal |
+| 3 | 28–45 | +500 kcal |
 
 ---
 
@@ -221,7 +208,7 @@ Semua endpoint users memerlukan: **`Authorization: Bearer <accessToken>`**
 
 ### GET /users/profile
 
-Ambil profil user beserta avatar (jika ada).
+Ambil profil lengkap user beserta signed URL avatar.
 
 **Response 200**
 ```json
@@ -231,33 +218,34 @@ Ambil profil user beserta avatar (jika ada).
   "data": {
     "fullName": "Siti Rahayu",
     "email": "siti@example.com",
-    "avatarUrl": "https://supabase.../signed-url..." 
+    "phoneNumber": "08123456789",
+    "avatarUrl": "https://supabase.../signed-url..."
   }
 }
 ```
 
-> `avatarUrl` hanya ada jika user sudah upload avatar. Signed URL berlaku **1 jam**.
+> `avatarUrl` adalah signed URL dari Supabase Storage, berlaku **1 jam**.
 
 ---
 
 ### PATCH /users/profile
 
-Update nama dan/atau email user. Untuk ganti email, password wajib disertakan.
+Update nama dan/atau email user. Untuk ganti email, wajib sertakan password saat ini.
 
 **Request Body** (minimal 1 field)
 
-| Field | Type | Required | Keterangan |
-|-------|------|----------|-----------|
-| fullName | string | — | Minimal 2 karakter |
-| email | string | — | Format email valid. Wajib sertakan `password` |
-| password | string | — | Password saat ini. Wajib jika `email` diisi |
+| Field | Type | Keterangan |
+|-------|------|-----------|
+| fullName | string | Min 2 karakter |
+| email | string | Format email valid. Wajib sertakan `password` |
+| password | string | Password saat ini. Wajib jika `email` diisi |
 
-**Contoh Request — ganti nama saja**
+**Contoh — ganti nama saja**
 ```json
 { "fullName": "Siti Rahayu Baru" }
 ```
 
-**Contoh Request — ganti email (butuh password)**
+**Contoh — ganti email**
 ```json
 {
   "email": "siti.baru@example.com",
@@ -272,14 +260,10 @@ Update nama dan/atau email user. Untuk ganti email, password wajib disertakan.
   "message": "Profile updated successfully",
   "data": {
     "fullName": "Siti Rahayu Baru",
-    "email": "siti@example.com"
+    "email": "siti@example.com",
+    "phoneNumber": "08123456789"
   }
 }
-```
-
-**Response 404** — Error validasi atau user tidak ditemukan
-```json
-{ "success": false, "message": "Password is required to change email" }
 ```
 
 ---
@@ -293,7 +277,7 @@ Ganti password user.
 | Field | Type | Required | Keterangan |
 |-------|------|----------|-----------|
 | currentPassword | string | ✅ | Password saat ini |
-| newPassword | string | ✅ | Password baru, minimal 6 karakter |
+| newPassword | string | ✅ | Password baru, min 6 karakter |
 
 **Response 200**
 ```json
@@ -307,15 +291,36 @@ Ganti password user.
 
 ---
 
-### PATCH /users/preference
+### PATCH /users/phone-number
 
-Update preferensi makanan (lauk favorit).
+Update nomor telepon user.
 
 **Request Body**
 
 | Field | Type | Required | Keterangan |
 |-------|------|----------|-----------|
-| foodPreference | integer | ✅ | ID makanan dari tabel foods (min: 1) |
+| phoneNumber | string | ✅ | 10–20 karakter |
+
+**Response 200**
+```json
+{
+  "success": true,
+  "message": "Phone number updated successfully",
+  "data": { "phoneNumber": "08198765432" }
+}
+```
+
+---
+
+### PATCH /users/preference
+
+Update preferensi makanan (lauk favorit untuk rekomendasi).
+
+**Request Body**
+
+| Field | Type | Required | Keterangan |
+|-------|------|----------|-----------|
+| foodPreference | integer | ✅ | ID makanan valid dari tabel `foods` (min: 1) |
 
 **Response 200**
 ```json
@@ -338,9 +343,7 @@ Ambil signed URL avatar user saat ini.
 {
   "success": true,
   "message": "Avatar URL retrieved successfully",
-  "data": {
-    "avatarUrl": "https://supabase.../signed-url..."
-  }
+  "data": { "avatarUrl": "https://supabase.../signed-url..." }
 }
 ```
 
@@ -348,13 +351,13 @@ Ambil signed URL avatar user saat ini.
 
 ### PATCH /users/avatar
 
-Upload atau ganti foto profil. Avatar lama akan otomatis dihapus dari storage.
+Upload atau ganti foto profil. Avatar lama otomatis dihapus dari storage.
 
 **Content-Type:** `multipart/form-data`
 
 | Field | Type | Keterangan |
 |-------|------|-----------|
-| file | File | Wajib bertipe image/*. Maks 2 MB. |
+| file | File | Wajib bertipe `image/*`. Maks **2 MB**. |
 
 **Response 200**
 ```json
@@ -371,13 +374,13 @@ Upload atau ganti foto profil. Avatar lama akan otomatis dihapus dari storage.
 ## Dashboard
 
 Semua endpoint dashboard memerlukan: **`Authorization: Bearer <accessToken>`**  
-User harus sudah menyelesaikan onboarding sebelum mengakses endpoint ini.
+User harus sudah menyelesaikan onboarding.
 
 ---
 
 ### GET /dashboard/data
 
-Ambil data ringkasan profil kehamilan untuk halaman utama.
+Ringkasan profil kehamilan untuk halaman utama.
 
 **Response 200**
 ```json
@@ -392,13 +395,11 @@ Ambil data ringkasan profil kehamilan untuk halaman utama.
 }
 ```
 
-> `avatarUrl` bisa `null` jika belum ada avatar.
-
 ---
 
 ### GET /dashboard/meal-recommendations
 
-Ambil rekomendasi makanan per sesi makan berdasarkan profil kalori.
+Rekomendasi makanan per sesi makan berdasarkan kalori dan preferensi user.
 
 **Response 200**
 ```json
@@ -406,29 +407,41 @@ Ambil rekomendasi makanan per sesi makan berdasarkan profil kalori.
   "success": true,
   "message": "Meal recommendations retrieved successfully",
   "data": {
-    "price": 25000,
-    "pokokGram": 200,
-    "laukGram": 100,
-    "sayurGram": 150,
-    "pokokPrice": 8000,
-    "laukPrice": 12000,
-    "sayurPrice": 5000,
-    "mealrecommendation": {
-      "pokokName": "Nasi Putih",
-      "pokokQty": 2,
-      "laukName": "Ayam Goreng",
-      "laukQty": 1,
-      "sayurName": "Bayam",
-      "sayurQty": 1
-    }
+    "pokok": {
+      "name": "Nasi Putih",
+      "quantity": 2,
+      "gram": 400,
+      "price": 8000,
+      "picture": "https://supabase.../signed-url..."
+    },
+    "lauk": {
+      "name": "Ayam Goreng",
+      "quantity": 1,
+      "gram": 100,
+      "price": 12000,
+      "picture": "https://supabase.../signed-url..."
+    },
+    "sayur": {
+      "name": "Bayam",
+      "quantity": 1,
+      "gram": 150,
+      "price": 5000,
+      "picture": "https://supabase.../signed-url..."
+    },
+    "totalPrice": 25000
   }
 }
 ```
 
 **Komposisi kalori per meal:**
-- Pokok (karbohidrat): 50% dari meal calories
-- Lauk (protein): 25% dari meal calories  
-- Sayur: 25% dari meal calories
+
+| Kategori | Porsi Kalori |
+|----------|-------------|
+| Pokok (karbohidrat) | 50% |
+| Lauk (protein, sesuai preferensi) | 25% |
+| Sayur | 25% |
+
+> Semua `picture` adalah signed URL Supabase Storage berlaku **1 jam**.
 
 ---
 
@@ -452,16 +465,16 @@ Tracking kalori hari ini.
 
 | Field | Keterangan |
 |-------|-----------|
-| caloriesConsumed | Total kalori yang sudah dikonsumsi hari ini |
-| caloriesRemaining | Sisa kalori (min 0, tidak negatif) |
-| progressPercentage | Persentase pencapaian kalori harian (maks 100%) |
+| caloriesConsumed | Total kalori dikonsumsi hari ini |
+| caloriesRemaining | Sisa kalori (minimum 0) |
+| progressPercentage | Persentase pencapaian kalori harian (maksimum 100%) |
 | mealsLogged | Jumlah entri meal log hari ini |
 
 ---
 
 ### GET /dashboard/weekly-progress
 
-Tracking kalori 7 hari dalam minggu berjalan (Senin–Minggu).
+Tracking kalori minggu berjalan (Senin–Minggu) beserta daftar makanan per hari.
 
 **Response 200**
 ```json
@@ -470,20 +483,39 @@ Tracking kalori 7 hari dalam minggu berjalan (Senin–Minggu).
   "message": "Weekly progress retrieved successfully",
   "data": {
     "week": [
-      { "day": "Monday", "calories": 2100 },
-      { "day": "Tuesday", "calories": 1950 },
-      { "day": "Wednesday", "calories": 2200 },
-      { "day": "Thursday", "calories": 0 },
-      { "day": "Friday", "calories": 0 },
-      { "day": "Saturday", "calories": 0 },
-      { "day": "Sunday", "calories": 0 }
+      {
+        "day": "Monday",
+        "date": "2025-03-24",
+        "calories": 2100,
+        "foods": ["Nasi Putih", "Ayam Goreng", "Bayam"]
+      },
+      {
+        "day": "Tuesday",
+        "date": "2025-03-25",
+        "calories": 1950,
+        "foods": ["Nasi Merah", "Tempe"]
+      },
+      {
+        "day": "Wednesday",
+        "date": "2025-03-26",
+        "calories": 0,
+        "foods": []
+      }
     ],
-    "totalCalories": 6250
+    "totalCalories": 4050,
+    "dailyCalorieGoal": 2350
   }
 }
 ```
 
-> Hari yang belum dilalui atau tidak ada log akan bernilai `0`.
+| Field | Keterangan |
+|-------|-----------|
+| day | Nama hari (Monday–Sunday) |
+| date | Tanggal dalam format YYYY-MM-DD |
+| calories | Total kalori hari tersebut (0 jika tidak ada log) |
+| foods | Daftar unik nama makanan yang dikonsumsi hari itu |
+| totalCalories | Total kalori seluruh minggu |
+| dailyCalorieGoal | Target kalori harian dari profil kehamilan |
 
 ---
 
@@ -529,9 +561,9 @@ Cek status server dan koneksi database. Tidak memerlukan autentikasi.
 
 ## Catatan Keamanan
 
-- Password di-hash menggunakan **bcrypt** (salt rounds: 10)
+- Password di-hash dengan **bcrypt** (salt rounds: 10)
 - Refresh token menggunakan format `UUID.hexSecret`, disimpan sebagai bcrypt hash
-- Refresh token **dirotasi** setiap kali digunakan — token lama langsung dihapus
+- Refresh token **dirotasi** setiap digunakan — token lama langsung dihapus
 - Semua schema request menggunakan `additionalProperties: false`
 - Upload file dibatasi **2 MB** dan hanya tipe `image/*`
-- Avatar disimpan di **Supabase Storage** dengan signed URL (TTL: 1 jam)
+- Avatar & gambar makanan disimpan di **Supabase Storage** dengan signed URL (TTL: 1 jam)
