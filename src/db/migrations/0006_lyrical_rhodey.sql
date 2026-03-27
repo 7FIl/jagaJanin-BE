@@ -1,0 +1,1 @@
+ALTER TABLE "foods" ALTER COLUMN "picture_url" SET DEFAULT 'empty';

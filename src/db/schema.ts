@@ -5,8 +5,9 @@ export const users = pgTable("users", {
     full_name: varchar("full_name", { length: 100 }).notNull(),
     email: varchar("email", { length: 100 }).notNull().unique(),
     password: varchar("password", { length: 255 }).notNull(),
+    phone_number: varchar("phone_number", { length: 20 }).notNull(),
     role: varchar("role", { length: 50 }).notNull().default("user"),
-    avatar_url: text("avatar_url").notNull().default("empty"),
+    avatar_url: text("avatar_url").notNull().default("avatar/default.png"),
     complete_onboarding: boolean("complete_onboarding").notNull().default(false),
     created_at: timestamp("created_at").notNull().defaultNow(),
     updated_at: timestamp("updated_at").notNull().defaultNow(),
@@ -27,6 +28,7 @@ export const foods = pgTable("foods", {
     serving_id: integer("serving_id").notNull().references(() => serving.id),
     category: integer("category").notNull(),
     name: varchar("name", { length: 100 }).notNull(),
+    picture_url: text("picture_url").notNull().default("food/default.png"),
 });
 
 export const meal_log = pgTable("meal_log", {

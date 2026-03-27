@@ -22,3 +22,26 @@ export const onboardingFormSchema = {
 		additionalProperties: false
 	}
 };
+
+export const editMealLogSchema = {
+	body: {
+		type: "object",
+		required: ["mealLogId", "quantity"],
+		properties: {
+			mealLogId: { type: "string" },
+			quantity: { type: "integer", minimum: 1 }
+		},
+		additionalProperties: false
+	}
+};
+
+export const deleteMealLogSchema = {
+	body: {
+		type: "object",
+		required: ["mealLogId"],
+		properties: {
+			mealLogId: { type: "string" }
+		},
+		additionalProperties: false
+	}
+};

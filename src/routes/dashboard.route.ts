@@ -1,5 +1,6 @@
 import { FastifyInstance } from "fastify";
 import { dashboardController } from "../controllers/dashboard.controller.js";
+import { editMealLogSchema, deleteMealLogSchema } from "../schema/form.schema.js";
 
 export async function dashboardRoutes(fastify: FastifyInstance) {
     fastify.get("/data", { onRequest: [fastify.authenticate] }, dashboardController.getDashboardData);

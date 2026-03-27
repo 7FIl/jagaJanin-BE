@@ -7,6 +7,7 @@ import bcrypt from "bcrypt";
 export interface userProfileResponse {
     fullName: string;
     email: string;
+    phoneNumber: string;
     avatarUrl?: string | undefined;
 }
 
@@ -14,6 +15,7 @@ export interface updateProfileInput {
     fullName?: string;
     email?: string;
     password?: string;
+    phoneNumber?: string;
 }
 
 export interface updatePasswordInput {
@@ -41,15 +43,15 @@ export class UsersService {
     async userProfile(userId: string): Promise<userProfileResponse> {
         const user = await getUserId(userId);
 
-        if (user.avatar_url !== "empty") {
-            const { data } = await supabase.storage
-                .from("avatars")
-                .createSignedUrl(user.avatar_url, 60 * 60);
+        const { data } = await supabase.storage
+            .from("avatars")
+            .createSignedUrl(user.avatar_url, 60 * 60);
 
-        return { fullName: user.full_name, email: user.email, avatarUrl: data?.signedUrl };
+        if (!data) {
+            throw new Error("Failed to generate signed URL");
         }
 
-        return { fullName: user.full_name, email: user.email };
+        return { fullName: user.full_name, email: user.email, phoneNumber: user.phone_number, avatarUrl: data.signedUrl };
     }
 
     async updateEmail(userId: string, email: string,password: string): Promise<string> {
@@ -81,7 +83,7 @@ export class UsersService {
             .update(users)
             .set({ full_name: fullName, updated_at: new Date() })
             .where(eq(users.id, userId))
-            .returning({ fullName: users.full_name, email: users.email })
+            .returning({ fullName: users.full_name, email: users.email, phoneNumber: users.phone_number })
 
         if (!updatedUser) {
             throw new Error("User not found");
@@ -97,10 +99,24 @@ export class UsersService {
 
         if (email !== undefined && password !== undefined) {
             const updatedEmail = await this.updateEmail(userId, email, password);
-            return { fullName: updatedUser.fullName, email: updatedEmail };
+            return { fullName: updatedUser.fullName, email: updatedEmail, phoneNumber: updatedUser.phoneNumber };
         }
         
-        return { fullName: updatedUser.fullName, email: updatedUser.email };
+        return { fullName: updatedUser.fullName, email: updatedUser.email, phoneNumber: updatedUser.phoneNumber };
+    }
+
+    async updatePhoneNumber(userId: string, phoneNumber: string): Promise<string> {
+        const [updatedUser] = await db
+            .update(users)
+            .set({ phone_number: phoneNumber, updated_at: new Date() })
+            .where(eq(users.id, userId))
+            .returning({ phoneNumber: users.phone_number });
+
+        if (!updatedUser) {
+            throw new Error("Failed to update phone number");
+        }
+
+        return updatedUser.phoneNumber;
     }
 
     async editPassword(userId: string, currentPassword: string, newPassword: string): Promise<boolean> {
@@ -146,11 +162,11 @@ export class UsersService {
         
         const user = await getUserId(userId);
 
-        if (user.avatar_url !== "empty") {
-            await supabase.storage
-                .from("avatars")
-                .remove([user.avatar_url]);
-        }
+        
+        await supabase.storage
+            .from("avatars")
+            .remove([user.avatar_url]);
+
         
         if (!file) {
             throw new Error("No file uploaded");
@@ -185,10 +201,6 @@ export class UsersService {
 
     async avatarUrl(userId: string): Promise<string> {
         const user = await getUserId(userId);
-        
-        if (user.avatar_url === "empty") {
-            return user.avatar_url;
-        }
 
         const { data } = await supabase.storage            
             .from("avatars")

@@ -89,6 +89,36 @@ export class UsersController {
         }
     }
 
+    async updatePhoneNumber(
+        request: FastifyRequest<{ Body: { phoneNumber: string } }>,
+        reply: FastifyReply) {
+        try {
+            const userId = request.user.sub;
+            const { phoneNumber } = request.body;
+
+            if (!phoneNumber || phoneNumber.length < 10 || phoneNumber.length > 20) {
+                return reply.status(400).send({
+                    success: false,
+                    message: "Phone number must be between 10 and 20 characters",
+                });
+            }
+
+            const updatedPhoneNumber = await usersService.updatePhoneNumber(userId, phoneNumber);
+            return reply.status(200).send({
+                success: true,
+                data: { phoneNumber: updatedPhoneNumber },
+                message: "Phone number updated successfully",
+            });
+        } catch (error) {
+            const errorMessage = 
+                error instanceof Error ? error.message : "An error occurred";
+            return reply.status(400).send({
+                success: false,
+                message: errorMessage,
+            });
+        }
+    }
+
     async updateAvatar(
         request: FastifyRequest,
         reply: FastifyReply) {

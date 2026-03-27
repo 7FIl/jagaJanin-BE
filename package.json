@@ -8,7 +8,9 @@
   "type": "module",
   "packageManager": "pnpm@10.30.3",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "dev": "tsx watch ./src/index.ts",
     "build": "tsc",
     "start": "node ./dist/index.js",
@@ -20,9 +22,11 @@
     "@types/bcrypt": "^6.0.0",
     "@types/node": "^25.3.5",
     "@types/pg": "^8.18.0",
+    "@vitest/coverage-v8": "4.1.2",
     "drizzle-kit": "^0.31.9",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.2"
   },
   "dependencies": {
     "@fastify/jwt": "^10.0.0",

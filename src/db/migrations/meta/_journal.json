@@ -36,6 +36,20 @@
       "when": 1773994489467,
       "tag": "0004_clumsy_millenium_guard",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1774615230384,
+      "tag": "0005_tricky_makkari",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1774615283596,
+      "tag": "0006_lyrical_rhodey",
+      "breakpoints": true
     }
   ]
 }

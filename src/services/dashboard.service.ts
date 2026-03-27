@@ -2,7 +2,8 @@ import { eq, and, gte, lte, sql } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { foods, meal_log, pregnancy_profile, serving } from "../db/schema.js";
 import { usersService } from "./users.service.js";
-import { calculateTrimester, mealRecomendationResponse, mealRecomendation } from "./form.service.js";
+import { calculateTrimester, mealRecomendation } from "./form.service.js";
+import { supabase } from "../lib/supabase.js";
 
 interface dashboardData {
     avatarUrl?: string;
@@ -10,15 +11,19 @@ interface dashboardData {
     weeks: number;
 }
 
-interface mealRecommendation {
+interface MealCategoryItem {
+    name: string;
+    quantity: number;
+    gram: number;
     price: number;
-    pokokGram: number;
-    laukGram: number;
-    sayurGram: number;
-    pokokPrice: number;
-    laukPrice: number;
-    sayurPrice: number;
-    mealrecommendation: mealRecomendationResponse;
+    picture: string;
+}
+
+interface mealRecommendation {
+    pokok: MealCategoryItem;
+    lauk: MealCategoryItem;
+    sayur: MealCategoryItem;
+    totalPrice: number;
 }
 
 interface dailyProgressResponse {
@@ -30,13 +35,26 @@ interface dailyProgressResponse {
 
 interface weeklyProgressDay {
     day: string;
+    date: string;
     calories: number;
+    foods: string[];
 }
 
 interface weeklyProgressResponse {
     week: weeklyProgressDay[];
     totalCalories: number;
+    dailyCalorieGoal: number;
 }
+
+const dayNames = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+];
 
 const getPregnancyProfile = async (userId: string) => {
     const [profileData] = await db
@@ -49,7 +67,54 @@ const getPregnancyProfile = async (userId: string) => {
         throw new Error("Pregnancy profile not found");
     }
     return profileData;
+};
+
+
+const getFoodDetailsByName = async (foodName: string) => {
+    const [foodData] = await db
+        .select({
+            foodId: foods.id,
+            servingGram: serving.gram,
+            servingPrice: serving.price,
+            foodPicture: foods.picture_url,
+        })
+        .from(foods)
+        .innerJoin(serving, eq(foods.serving_id, serving.id))
+        .where(eq(foods.name, foodName))
+        .limit(1);
+
+    if (!foodData) {
+        throw new Error(`Food details not found for ${foodName}`);
+    }
+
+    const { data } = await supabase.storage
+        .from("food")
+        .createSignedUrl(foodData.foodPicture, 60 * 60);
+
+    return { ...foodData, foodPicture: data!.signedUrl };
+};
+
+const calculateDayRange = (dateString: string) => {
+    const date = new Date(dateString);
+    date.setHours(0, 0, 0, 0);
+    
+    const nextDay = new Date(date);
+    nextDay.setDate(nextDay.getDate() + 1);
+
+    return { date, nextDay };
+};
+
+interface MealCategoryCalculation {
+    totalGram: number;
+    totalPrice: number;
 }
+
+const calculateMealCategory = (quantity: number, servingGram: number, servingPrice: number): MealCategoryCalculation => {
+    return {
+        totalGram: quantity * servingGram,
+        totalPrice: quantity * servingPrice,
+    };
+};
 
 export class DashboardService {
 
@@ -77,53 +142,48 @@ export class DashboardService {
             profileData.food_preference
         );
 
-        const getFoodDetails = async (foodName: string, quantity: number) => {
-            const [foodData] = await db
-                .select({
-                    foodId: foods.id,
-                    servingGram: serving.gram,
-                    servingPrice: serving.price,
-                })
-                .from(foods)
-                .innerJoin(serving, eq(foods.serving_id, serving.id))
-                .where(eq(foods.name, foodName))
-                .limit(1);
+        const pokokDetails = await getFoodDetailsByName(mealRecommendationData.pokokName);
+        const laukDetails = await getFoodDetailsByName(mealRecommendationData.laukName);
+        const sayurDetails = await getFoodDetailsByName(mealRecommendationData.sayurName);
 
-            if (!foodData) {
-                throw new Error(`Food details not found for ${foodName}`);
-            }
+        const pokokCalc = calculateMealCategory(mealRecommendationData.pokokQty, pokokDetails.servingGram, pokokDetails.servingPrice);
+        const laukCalc = calculateMealCategory(mealRecommendationData.laukQty, laukDetails.servingGram, laukDetails.servingPrice);
+        const sayurCalc = calculateMealCategory(mealRecommendationData.sayurQty, sayurDetails.servingGram, sayurDetails.servingPrice);
 
-            const totalGram = quantity * foodData.servingGram;
-            const totalPrice = quantity * foodData.servingPrice;
-
-            return { totalGram, totalPrice };
-        };
-
-        const pokokDetails = await getFoodDetails(mealRecommendationData.pokokName, mealRecommendationData.pokokQty);
-        const laukDetails = await getFoodDetails(mealRecommendationData.laukName, mealRecommendationData.laukQty);
-        const sayurDetails = await getFoodDetails(mealRecommendationData.sayurName, mealRecommendationData.sayurQty);
-
-        const totalPrice = pokokDetails.totalPrice + laukDetails.totalPrice + sayurDetails.totalPrice;
+        const totalPrice = pokokCalc.totalPrice + laukCalc.totalPrice + sayurCalc.totalPrice;
 
         return {
-            price: totalPrice,
-            pokokGram: pokokDetails.totalGram,
-            laukGram: laukDetails.totalGram,
-            sayurGram: sayurDetails.totalGram,
-            pokokPrice: pokokDetails.totalPrice,
-            laukPrice: laukDetails.totalPrice,
-            sayurPrice: sayurDetails.totalPrice,
-            mealrecommendation: mealRecommendationData,
+            pokok: {
+                name: mealRecommendationData.pokokName,
+                quantity: mealRecommendationData.pokokQty,
+                gram: pokokCalc.totalGram,
+                price: pokokCalc.totalPrice,
+                picture: pokokDetails.foodPicture,
+            },
+            lauk: {
+                name: mealRecommendationData.laukName,
+                quantity: mealRecommendationData.laukQty,
+                gram: laukCalc.totalGram,
+                price: laukCalc.totalPrice,
+                picture: laukDetails.foodPicture,
+            },
+            sayur: {
+                name: mealRecommendationData.sayurName,
+                quantity: mealRecommendationData.sayurQty,
+                gram: sayurCalc.totalGram,
+                price: sayurCalc.totalPrice,
+                picture: sayurDetails.foodPicture,
+            },
+            totalPrice: totalPrice,
         };
     }
+
 
     async dailyProgress(userId: string): Promise<dailyProgressResponse> {
         const profileData = await getPregnancyProfile(userId);
 
         const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const tomorrow = new Date(today);
-        tomorrow.setDate(tomorrow.getDate() + 1);
+        const { date: dayStart, nextDay: dayEnd } = calculateDayRange(today.toISOString().split('T')[0]!);
 
         const todayMealLogs = await db
             .select({
@@ -137,8 +197,8 @@ export class DashboardService {
             .where(
                 and(
                     eq(meal_log.user_id, userId),
-                    gte(meal_log.created_at, today),
-                    lte(meal_log.created_at, tomorrow)
+                    gte(meal_log.created_at, dayStart),
+                    lte(meal_log.created_at, dayEnd)
                 )
             );
 
@@ -181,6 +241,7 @@ export class DashboardService {
                 calories: serving.calories,
                 quantity: meal_log.quantity,
                 createdAt: meal_log.created_at,
+                foodName: foods.name,
             })
             .from(meal_log)
             .innerJoin(foods, eq(meal_log.food_id, foods.id))
@@ -193,38 +254,34 @@ export class DashboardService {
                 )
             );
 
-        const dayNames = [
-            "Sunday",
-            "Monday",
-            "Tuesday",
-            "Wednesday",
-            "Thursday",
-            "Friday",
-            "Saturday",
-        ];
         const caloriesByDay: { [key: number]: number } = {
-            0: 0,
-            1: 0,
-            2: 0,
-            3: 0,
-            4: 0,
-            5: 0,
-            6: 0,
+            0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0,
+        };
+        
+        const foodsByDay: { [key: number]: Set<string> } = {
+            0: new Set(), 1: new Set(), 2: new Set(), 3: new Set(),
+            4: new Set(), 5: new Set(), 6: new Set(),
         };
 
-        // Calculate calories for each day
         for (const log of weekMealLogs) {
             const dayNum = new Date(log.createdAt).getDay();
             caloriesByDay[dayNum]! += log.calories * log.quantity;
+            foodsByDay[dayNum]!.add(log.foodName);
         }
 
         const weekProgress: weeklyProgressDay[] = [];
         for (let i = 1; i < 8; i++) {
             const dayOfWeekNum = i === 7 ? 0 : i;
             const dayName = dayNames[dayOfWeekNum];
+            const dayDate = new Date(startOfWeek);
+            dayDate.setDate(startOfWeek.getDate() + (i - 1));
+            const dateString = dayDate.toISOString().split('T')[0];
+            
             weekProgress.push({
                 day: dayName!,
+                date: dateString!,
                 calories: caloriesByDay[dayOfWeekNum]!,
+                foods: Array.from(foodsByDay[dayOfWeekNum]!),
             });
         }
 
@@ -233,8 +290,11 @@ export class DashboardService {
         return {
             week: weekProgress,
             totalCalories: totalCalories,
+            dailyCalorieGoal: profileData.daily_calories,
         };
     }
+
+
 }
 
 export const dashboardService = new DashboardService();

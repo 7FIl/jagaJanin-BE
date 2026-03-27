@@ -1,0 +1,2 @@
+ALTER TABLE "foods" ADD COLUMN "picture_url" text NOT NULL DEFAULT 'empty';--> statement-breakpoint
+ALTER TABLE "users" ADD COLUMN "phone_number" varchar(20) NOT NULL DEFAULT '';--> statement-breakpoint

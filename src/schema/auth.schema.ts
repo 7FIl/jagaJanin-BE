@@ -1,11 +1,12 @@
 export const registerSchema = {
     body: {
         type: "object",
-        required: ["fullName", "email", "password"],
+        required: ["fullName", "email", "password", "phoneNumber"],
         properties: {
             fullName: { type: "string", minLength: 2 },
             email: { type: "string", format: "email" },
-            password: { type: "string", minLength: 6 }
+            password: { type: "string", minLength: 6 },
+            phoneNumber: { type: "string", minLength: 10, maxLength: 20 }
         },
         additionalProperties: false
     }
@@ -18,6 +19,17 @@ export const loginSchema = {
         properties: {
             email: { type: "string", format: "email" },
             password: { type: "string" }
+        },
+        additionalProperties: false
+    }
+};
+
+export const updatePhoneNumberSchema = {
+    body: {
+        type: "object",
+        required: ["phoneNumber"],
+        properties: {
+            phoneNumber: { type: "string", minLength: 10, maxLength: 20 }
         },
         additionalProperties: false
     }

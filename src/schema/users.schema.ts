@@ -4,7 +4,8 @@ export const updateUserProfileSchema = {
         properties: {
             fullName: { type: "string", minLength: 2 },
             email: { type: "string", format: "email" },
-            password: { type: "string", minLength: 6 }
+            password: { type: "string", minLength: 6 },
+            phoneNumber: { type: "string", minLength: 10, maxLength: 20 }
         },
         additionalProperties: false,
         minProperties: 1
@@ -29,6 +30,17 @@ export const updatePreferenceSchema = {
         required: ["foodPreference"],
         properties: {
             foodPreference: { type: "integer", minimum: 1 }
+        },
+        additionalProperties: false
+    }
+};
+
+export const updatePhoneNumberSchema = {
+    body: {
+        type: "object",
+        required: ["phoneNumber"],
+        properties: {
+            phoneNumber: { type: "string", minLength: 10, maxLength: 20 }
         },
         additionalProperties: false
     }

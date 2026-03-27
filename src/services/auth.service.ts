@@ -5,7 +5,6 @@ import bcrypt from "bcrypt";
 import crypto from "crypto";
 import "dotenv/config";
 import { FastifyInstance } from "fastify";
-import { getUserId } from "./users.service.js";
 
 const jwtExp = process.env.JWT_EXPIRATION as string;
 
@@ -22,6 +21,7 @@ export interface registerInput {
     fullName: string;
     email: string;
     password: string;
+    phoneNumber: string;
 }
 
 export interface userResponse {
@@ -29,6 +29,11 @@ export interface userResponse {
     fullName: string;
     email: string;
     role: string;
+}
+
+export interface userDetail extends userResponse {
+    phoneNumber: string;
+    avatarUrl: string;
 }
 
 
@@ -50,6 +55,7 @@ export class AuthService {
             full_name: input.fullName,
             email: input.email,
             password: hashedPassword,
+            phone_number: input.phoneNumber,
         })
         .returning({ 
             id: users.id,
@@ -69,11 +75,10 @@ export class AuthService {
             .limit(1);
 
         if (!user) {
-            throw new Error("Invalid credentials");
+            throw new Error("User not found");
         }
-        
-        const isPasswordValid = await bcrypt.compare(input.password, user.password);
 
+        const isPasswordValid = await bcrypt.compare(input.password, user.password);
         if (!isPasswordValid) {
             throw new Error("Invalid credentials");
         }
@@ -81,6 +86,19 @@ export class AuthService {
         return { id: user.id, fullName: user.full_name, email: user.email, role: user.role };
     }
 
+    async getUserById(userId: string): Promise<userDetail> {
+        const [user] = await db
+            .select()
+            .from(users)
+            .where(eq(users.id, userId))
+            .limit(1);
+
+        if (!user) {
+            throw new Error("User not found");
+        }
+
+        return { id: user.id, fullName: user.full_name, email: user.email, role: user.role, phoneNumber: user.phone_number, avatarUrl: user.avatar_url };
+    }
 
     async generateRefreshToken(userId: string): Promise<string> {
         const tokenId = crypto.randomUUID();
@@ -100,7 +118,7 @@ export class AuthService {
         return rawToken;
     }
 
-    async generateAccessToken(user: { id: string, role: string }, fastify: FastifyInstance): Promise<string> {
+    async generateAccessToken(user: userResponse, fastify: FastifyInstance): Promise<string> {
         return fastify.jwt.sign(
             { sub: user.id, role: user.role },
             { expiresIn: jwtExp }
@@ -121,7 +139,7 @@ export class AuthService {
             .limit(1);
         
         if (!storedToken) {
-            throw new Error("Invalid refresh token");
+            throw new Error("Please re-login to get a new refresh token");
         }
         
         const isTokenValid = await bcrypt.compare(token, storedToken.token);
@@ -137,12 +155,12 @@ export class AuthService {
         const { valid, userId, tokenId } = await this.validateRefreshToken(token);
 
         if (!valid || !userId || !tokenId) {
-            throw new Error("Invalid refresh token");
+            throw new Error("Please re-login to get a new refresh token");
         }
 
         await db.delete(refresh_tokens).where(eq(refresh_tokens.id, tokenId));
 
-        const user = await getUserId(userId);
+        const user = await this.getUserById(userId);
         const newRefreshToken = await this.generateRefreshToken(userId);
         const newAccessToken = await this.generateAccessToken(user, fastify);
 
