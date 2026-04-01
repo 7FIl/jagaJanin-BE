@@ -95,7 +95,9 @@ const getFoodDetailsByName = async (foodName: string) => {
 };
 
 const calculateDayRange = (dateString: string) => {
-    const date = new Date(dateString);
+    // Parse dd-mm-yyyy format
+    const [day, month, year] = dateString.split('-');
+    const date = new Date(`${year}-${month}-${day}`);
     date.setHours(0, 0, 0, 0);
     
     const nextDay = new Date(date);
@@ -183,7 +185,11 @@ export class DashboardService {
         const profileData = await getPregnancyProfile(userId);
 
         const today = new Date();
-        const { date: dayStart, nextDay: dayEnd } = calculateDayRange(today.toISOString().split('T')[0]!);
+        const day = String(today.getDate()).padStart(2, '0');
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const year = today.getFullYear();
+        const todayDateString = `${day}-${month}-${year}`;
+        const { date: dayStart, nextDay: dayEnd } = calculateDayRange(todayDateString);
 
         const todayMealLogs = await db
             .select({
@@ -275,11 +281,14 @@ export class DashboardService {
             const dayName = dayNames[dayOfWeekNum];
             const dayDate = new Date(startOfWeek);
             dayDate.setDate(startOfWeek.getDate() + (i - 1));
-            const dateString = dayDate.toISOString().split('T')[0];
+            const day = String(dayDate.getDate()).padStart(2, '0');
+            const month = String(dayDate.getMonth() + 1).padStart(2, '0');
+            const year = dayDate.getFullYear();
+            const dateString = `${day}-${month}-${year}`;
             
             weekProgress.push({
                 day: dayName!,
-                date: dateString!,
+                date: dateString,
                 calories: caloriesByDay[dayOfWeekNum]!,
                 foods: Array.from(foodsByDay[dayOfWeekNum]!),
             });
@@ -291,6 +300,152 @@ export class DashboardService {
             week: weekProgress,
             totalCalories: totalCalories,
             dailyCalorieGoal: profileData.daily_calories,
+        };
+    }
+
+    async getMealLogsByDate(userId: string, dateString: string) {
+        const { date: dayStart, nextDay: dayEnd } = calculateDayRange(dateString);
+
+        const mealLogs = await db
+            .select({
+                mealLogId: meal_log.id,
+                foodId: foods.id,
+                foodName: foods.name,
+                quantity: meal_log.quantity,
+                calories: serving.calories,
+                gram: serving.gram,
+                protein: serving.protein,
+                fat: serving.fat,
+                pictureUrl: foods.picture_url,
+                createdAt: meal_log.created_at,
+                updatedAt: meal_log.updated_at,
+            })
+            .from(meal_log)
+            .innerJoin(foods, eq(meal_log.food_id, foods.id))
+            .innerJoin(serving, eq(foods.serving_id, serving.id))
+            .where(
+                and(
+                    eq(meal_log.user_id, userId),
+                    gte(meal_log.created_at, dayStart),
+                    lte(meal_log.created_at, dayEnd)
+                )
+            );
+
+        const totalCalories = mealLogs.reduce(
+            (total, log) => total + (log.calories * log.quantity),
+            0
+        );
+
+        return {
+            date: dateString,
+            meals: mealLogs,
+            totalCalories: totalCalories,
+            mealCount: mealLogs.length,
+        };
+    }
+
+    async createMealLog(userId: string, foodId: number, quantity: number, dateString: string) {
+        // Check if food exists
+        const [foodData] = await db
+            .select()
+            .from(foods)
+            .where(eq(foods.id, foodId))
+            .limit(1);
+
+        if (!foodData) {
+            throw new Error("Food not found");
+        }
+
+        // Create new meal log
+        const [newMeal] = await db
+            .insert(meal_log)
+            .values({
+                user_id: userId,
+                food_id: foodId,
+                quantity,
+                created_at: new Date(dateString),
+            })
+            .returning({ id: meal_log.id });
+
+        return {
+            success: true,
+            message: "Meal log created successfully",
+            mealLogId: newMeal!.id,
+        };
+    }
+
+    async editMealLog(userId: string, mealLogId: string, foodId?: number, quantity?: number) {
+        // Check if meal log exists and belongs to user
+        const [existingMeal] = await db
+            .select()
+            .from(meal_log)
+            .where(
+                and(
+                    eq(meal_log.id, mealLogId),
+                    eq(meal_log.user_id, userId)
+                )
+            )
+            .limit(1);
+
+        if (!existingMeal) {
+            throw new Error("Meal log not found");
+        }
+
+        // If foodId is provided, verify it exists
+        if (foodId) {
+            const [foodData] = await db
+                .select()
+                .from(foods)
+                .where(eq(foods.id, foodId))
+                .limit(1);
+
+            if (!foodData) {
+                throw new Error("Food not found");
+            }
+        }
+
+        // Build update object with provided fields
+        const updateData: { food_id?: number; quantity?: number; updated_at: Date } = {
+            updated_at: new Date()
+        };
+        
+        if (foodId) updateData.food_id = foodId;
+        if (quantity) updateData.quantity = quantity;
+
+        // Update meal log with all provided changes
+        await db
+            .update(meal_log)
+            .set(updateData)
+            .where(eq(meal_log.id, mealLogId));
+
+        const updatedFields = [];
+        if (foodId) updatedFields.push("food");
+        if (quantity) updatedFields.push("quantity");
+
+        return {
+            success: true,
+            message: `Meal log updated successfully (${updatedFields.join(", ")})`,
+            mealLogId: mealLogId,
+        };
+    }
+
+    async deleteMealLogsByDate(userId: string, dateString: string) {
+        const { date: dayStart, nextDay: dayEnd } = calculateDayRange(dateString);
+
+        const result = await db
+            .delete(meal_log)
+            .where(
+                and(
+                    eq(meal_log.user_id, userId),
+                    gte(meal_log.created_at, dayStart),
+                    lte(meal_log.created_at, dayEnd)
+                )
+            );
+
+        return {
+            success: true,
+            message: "All meal logs for this date have been deleted",
+            deletedCount: result.rowCount,
         };
     }
 
