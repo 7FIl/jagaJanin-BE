@@ -50,6 +50,13 @@
       "when": 1774615283596,
       "tag": "0006_lyrical_rhodey",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1775018911285,
+      "tag": "0007_quick_tarantula",
+      "breakpoints": true
     }
   ]
 }

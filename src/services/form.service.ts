@@ -23,12 +23,12 @@ interface formResponse {
 }
 
 export interface mealRecomendationResponse {
-    pokokName: string;
-    pokokQty: number;
-    laukName: string;
-    laukQty: number;
-    sayurName: string;
-    sayurQty: number;
+    stapleName: string;
+    stapleQty: number;
+    sideName: string;
+    sideQty: number;
+    vegetableName: string;
+    vegetableQty: number;
 }
 
 interface onboardingResponse {
@@ -95,9 +95,9 @@ export async function mealRecomendation(mealCalories: number, foodPreferenceId: 
 
     const caloriesPerMeal = mealCalories;
 
-    const pokokCalories = Math.round(caloriesPerMeal * 0.5);
-    const laukCalories = Math.round(caloriesPerMeal * 0.25);
-    const sayurCalories = Math.round(caloriesPerMeal * 0.25);
+    const stapleCalories = Math.round(caloriesPerMeal * 0.5);
+    const sideCalories = Math.round(caloriesPerMeal * 0.25);
+    const vegetableCalories = Math.round(caloriesPerMeal * 0.25);
 
     const findFoodForCalories = async (category: number, targetCalories: number) => {
         const availableFoods = await db
@@ -167,17 +167,17 @@ export async function mealRecomendation(mealCalories: number, foodPreferenceId: 
         };
     };
 
-    const pokok = await findFoodForCalories(1, pokokCalories);
-    const lauk = await getFoodById(foodPreferenceId, laukCalories);
-    const sayur = await findFoodForCalories(3, sayurCalories);
+    const staple = await findFoodForCalories(1, stapleCalories);
+    const side = await getFoodById(foodPreferenceId, sideCalories);
+    const vegetable = await findFoodForCalories(3, vegetableCalories);
 
     return {
-        pokokName: pokok.name,
-        pokokQty: pokok.quantity,
-        laukName: lauk.name,
-        laukQty: lauk.quantity,
-        sayurName: sayur.name,
-        sayurQty: sayur.quantity,
+        stapleName: staple.name,
+        stapleQty: staple.quantity,
+        sideName: side.name,
+        sideQty: side.quantity,
+        vegetableName: vegetable.name,
+        vegetableQty: vegetable.quantity,
     };
 }
     

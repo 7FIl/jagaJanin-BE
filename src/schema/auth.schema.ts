@@ -45,3 +45,26 @@ export const refreshTokenSchema = {
         additionalProperties: false
     }
 };
+
+export const otpSchema = {
+    body: {
+        type: "object",
+        required: ["email", "code"],
+        properties: {
+            email: { type: "string", format: "email" },
+            code: { type: "string", minLength: 6, maxLength: 6 }
+        },
+        additionalProperties: false
+    }
+};
+
+export const resendOtpSchema = {
+    body: {
+        type: "object",
+        required: ["email"],
+        properties: {
+            email: { type: "string", format: "email" }
+        },
+        additionalProperties: false
+    }
+};

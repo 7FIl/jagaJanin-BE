@@ -1,5 +1,5 @@
 import { FastifyRequest, FastifyReply, FastifyInstance } from "fastify";
-import { authService, loginInput, registerInput} from "../services/auth.service.js";
+import { authService, loginInput, otpInput, registerInput} from "../services/auth.service.js";
 
 export function buildAuthController(fastify: FastifyInstance) {
     return {
@@ -18,9 +18,10 @@ export function buildAuthController(fastify: FastifyInstance) {
                 }
 
                 const newUser = await authService.createNewUser(input);
+                await authService.sendOtp(input.email);
                 return reply.status(201).send({
                     success: true,
-                    data: newUser,
+                    data: {id: newUser.id, email: newUser.email},
                     message: "User registered successfully",
                 });
 
@@ -47,7 +48,7 @@ export function buildAuthController(fastify: FastifyInstance) {
 
                 return reply.status(200).send({
                     success: true,
-                    data: { user, accessToken, refreshToken },
+                    data: { user: { id: user.id, email: user.email }, accessToken, refreshToken },
                     message: "User logged in successfully",
                 });
                 
@@ -101,6 +102,49 @@ export function buildAuthController(fastify: FastifyInstance) {
                 const errorMessage =
                     error instanceof Error ? error.message : "An error occurred";
                 return reply.status(500).send({
+                    success: false,
+                    message: errorMessage,
+                });
+            }
+        },
+
+        async getOtp(
+            request: FastifyRequest<{ Body: { email: string } }>,
+            reply: FastifyReply,
+        ){
+            const input = request.body;
+            try {
+                await authService.sendOtp(input.email);
+                return reply.status(200).send({
+                    success: true,
+                    message: "OTP sent successfully",
+                });
+            } catch (error) {
+                const errorMessage =
+                    error instanceof Error ? error.message : "An error occurred";
+                return reply.status(500).send({
+                    success: false,
+                    message: errorMessage,
+                });
+            }
+
+        },
+
+        async verifyEmail(
+            request: FastifyRequest<{ Body: otpInput }>,
+            reply: FastifyReply,
+        ) {
+            const input = request.body;
+            try {
+                await authService.verifyOtp(input);
+                return reply.status(200).send({
+                    success: true,
+                    message: "Email verified successfully",
+                });
+            } catch (error) {
+                const errorMessage =
+                    error instanceof Error ? error.message : "An error occurred";
+                return reply.status(400).send({
                     success: false,
                     message: errorMessage,
                 });

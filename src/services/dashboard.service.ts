@@ -20,9 +20,9 @@ interface MealCategoryItem {
 }
 
 interface mealRecommendation {
-    pokok: MealCategoryItem;
-    lauk: MealCategoryItem;
-    sayur: MealCategoryItem;
+    staple: MealCategoryItem;
+    side: MealCategoryItem;
+    vegetable: MealCategoryItem;
     totalPrice: number;
 }
 
@@ -142,37 +142,37 @@ export class DashboardService {
             profileData.food_preference
         );
 
-        const pokokDetails = await getFoodDetailsByName(mealRecommendationData.pokokName);
-        const laukDetails = await getFoodDetailsByName(mealRecommendationData.laukName);
-        const sayurDetails = await getFoodDetailsByName(mealRecommendationData.sayurName);
+        const stapleDetails = await getFoodDetailsByName(mealRecommendationData.stapleName);
+        const sideDetails = await getFoodDetailsByName(mealRecommendationData.sideName);
+        const vegetableDetails = await getFoodDetailsByName(mealRecommendationData.vegetableName);
 
-        const pokokCalc = calculateMealCategory(mealRecommendationData.pokokQty, pokokDetails.servingGram, pokokDetails.servingPrice);
-        const laukCalc = calculateMealCategory(mealRecommendationData.laukQty, laukDetails.servingGram, laukDetails.servingPrice);
-        const sayurCalc = calculateMealCategory(mealRecommendationData.sayurQty, sayurDetails.servingGram, sayurDetails.servingPrice);
+        const stapleCalc = calculateMealCategory(mealRecommendationData.stapleQty, stapleDetails.servingGram, stapleDetails.servingPrice);
+        const sideCalc = calculateMealCategory(mealRecommendationData.sideQty, sideDetails.servingGram, sideDetails.servingPrice);
+        const vegetableCalc = calculateMealCategory(mealRecommendationData.vegetableQty, vegetableDetails.servingGram, vegetableDetails.servingPrice);
 
-        const totalPrice = pokokCalc.totalPrice + laukCalc.totalPrice + sayurCalc.totalPrice;
+        const totalPrice = stapleCalc.totalPrice + sideCalc.totalPrice + vegetableCalc.totalPrice;
 
         return {
-            pokok: {
-                name: mealRecommendationData.pokokName,
-                quantity: mealRecommendationData.pokokQty,
-                gram: pokokCalc.totalGram,
-                price: pokokCalc.totalPrice,
-                picture: pokokDetails.foodPicture,
+            staple: {
+                name: mealRecommendationData.stapleName,
+                quantity: mealRecommendationData.stapleQty,
+                gram: stapleCalc.totalGram,
+                price: stapleCalc.totalPrice,
+                picture: stapleDetails.foodPicture,
             },
-            lauk: {
-                name: mealRecommendationData.laukName,
-                quantity: mealRecommendationData.laukQty,
-                gram: laukCalc.totalGram,
-                price: laukCalc.totalPrice,
-                picture: laukDetails.foodPicture,
+            side: {
+                name: mealRecommendationData.sideName,
+                quantity: mealRecommendationData.sideQty,
+                gram: sideCalc.totalGram,
+                price: sideCalc.totalPrice,
+                picture: sideDetails.foodPicture,
             },
-            sayur: {
-                name: mealRecommendationData.sayurName,
-                quantity: mealRecommendationData.sayurQty,
-                gram: sayurCalc.totalGram,
-                price: sayurCalc.totalPrice,
-                picture: sayurDetails.foodPicture,
+            vegetable: {
+                name: mealRecommendationData.vegetableName,
+                quantity: mealRecommendationData.vegetableQty,
+                gram: vegetableCalc.totalGram,
+                price: vegetableCalc.totalPrice,
+                picture: vegetableDetails.foodPicture,
             },
             totalPrice: totalPrice,
         };

@@ -94,16 +94,9 @@ export class UsersController {
         reply: FastifyReply) {
         try {
             const userId = request.user.sub;
-            const { phoneNumber } = request.body;
+            const input = request.body;
 
-            if (!phoneNumber || phoneNumber.length < 10 || phoneNumber.length > 20) {
-                return reply.status(400).send({
-                    success: false,
-                    message: "Phone number must be between 10 and 20 characters",
-                });
-            }
-
-            const updatedPhoneNumber = await usersService.updatePhoneNumber(userId, phoneNumber);
+            const updatedPhoneNumber = await usersService.updatePhoneNumber(userId, input.phoneNumber);
             return reply.status(200).send({
                 success: true,
                 data: { phoneNumber: updatedPhoneNumber },

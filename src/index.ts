@@ -1,5 +1,6 @@
 import fastify from "fastify";
 import fastifyJwt from "@fastify/jwt";
+import fastifyRateLimit from "@fastify/rate-limit";
 import multipart from "@fastify/multipart";
 import { checkDatabaseConnection } from "./db/index.js";
 import { authRoutes } from "./routes/auth.routes.js";
@@ -44,7 +45,15 @@ app.get("/health", async (request, reply) => {
     return { status: 'unhealthy', database: 'disconnected' };
 });
 
-app.register(authRoutes, { prefix: "/api/v1/auth" });
+app.register(async function (app) {
+  await app.register(fastifyRateLimit, {
+    max: 5,
+    timeWindow: "3 minute",
+  });
+
+  app.register(authRoutes, { prefix: "/api/v1/auth" });
+});
+
 app.register(formRoutes, { prefix: "/api/v1/forms" });
 app.register(usersRoutes, { prefix: "/api/v1/users" });
 app.register(dashboardRoutes, { prefix: "/api/v1/dashboard" });

@@ -4,11 +4,12 @@ export const users = pgTable("users", {
     id: uuid("id").primaryKey().defaultRandom(),
     full_name: varchar("full_name", { length: 100 }).notNull(),
     email: varchar("email", { length: 100 }).notNull().unique(),
-    password: varchar("password", { length: 255 }).notNull(),
+    password: varchar("password", { length: 100 }).notNull(),
     phone_number: varchar("phone_number", { length: 20 }).notNull(),
     role: varchar("role", { length: 50 }).notNull().default("user"),
     avatar_url: text("avatar_url").notNull().default("avatar/default.png"),
     complete_onboarding: boolean("complete_onboarding").notNull().default(false),
+    is_verified: boolean("is_verified").notNull().default(false),
     created_at: timestamp("created_at").notNull().defaultNow(),
     updated_at: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -62,4 +63,11 @@ export const refresh_tokens = pgTable("refresh_tokens", {
     expires_at: timestamp("expires_at").notNull(),
     created_at: timestamp("created_at").notNull().defaultNow(),
 });
-    
+
+export const otp = pgTable("otp", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    email: varchar("email", { length: 100 }).notNull(),
+    code: varchar("code", { length: 100 }).notNull(),
+    expires_at: timestamp("expires_at").notNull(),
+    created_at: timestamp("created_at").notNull().defaultNow(),
+});

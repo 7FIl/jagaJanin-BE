@@ -164,12 +164,12 @@ Submit form onboarding profil kehamilan. Hanya bisa dilakukan **satu kali** per 
     "aktivitas": "cukup aktif",
     "calories": 2350,
     "mealRecommendation": {
-      "pokokName": "Nasi Putih",
-      "pokokQty": 2,
-      "laukName": "Ayam Goreng",
-      "laukQty": 1,
-      "sayurName": "Bayam",
-      "sayurQty": 1
+      "stapleName": "Nasi Putih",
+      "stapleQty": 2,
+      "sideName": "Ayam Goreng",
+      "sideQty": 1,
+      "vegetableName": "Bayam",
+      "vegetableQty": 1
     }
   }
 }
@@ -407,21 +407,21 @@ Rekomendasi makanan per sesi makan berdasarkan kalori dan preferensi user.
   "success": true,
   "message": "Meal recommendations retrieved successfully",
   "data": {
-    "pokok": {
+    "staple": {
       "name": "Nasi Putih",
       "quantity": 2,
       "gram": 400,
       "price": 8000,
       "picture": "https://supabase.../signed-url..."
     },
-    "lauk": {
+    "side": {
       "name": "Ayam Goreng",
       "quantity": 1,
       "gram": 100,
       "price": 12000,
       "picture": "https://supabase.../signed-url..."
     },
-    "sayur": {
+    "vegetable": {
       "name": "Bayam",
       "quantity": 1,
       "gram": 150,
@@ -437,9 +437,9 @@ Rekomendasi makanan per sesi makan berdasarkan kalori dan preferensi user.
 
 | Kategori | Porsi Kalori |
 |----------|-------------|
-| Pokok (karbohidrat) | 50% |
-| Lauk (protein, sesuai preferensi) | 25% |
-| Sayur | 25% |
+| Staple (carbohydrates) | 50% |
+| Side (protein, based on preference) | 25% |
+| Vegetable | 25% |
 
 > Semua `picture` adalah signed URL Supabase Storage berlaku **1 jam**.
 
