@@ -21,6 +21,7 @@
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
     "@types/node": "^25.3.5",
+    "@types/pdfkit": "^0.17.5",
     "@types/pg": "^8.18.0",
     "@vitest/coverage-v8": "4.1.2",
     "drizzle-kit": "^0.31.9",
@@ -34,10 +35,12 @@
     "@fastify/rate-limit": "^10.3.0",
     "@supabase/supabase-js": "^2.99.3",
     "bcrypt": "^6.0.0",
+    "csv-stringify": "^6.7.0",
     "dotenv": "^17.3.1",
     "drizzle-orm": "^0.45.1",
     "fastify": "^5.8.2",
     "fastify-plugin": "^5.1.0",
+    "pdfkit": "^0.18.0",
     "pg": "^8.20.0",
     "resend": "^6.10.0"
   }

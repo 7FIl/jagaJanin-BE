@@ -3,6 +3,7 @@ import { db } from "../db/index.js";
 import { foods, meal_log, pregnancy_profile, serving } from "../db/schema.js";
 import { usersService } from "./users.service.js";
 import { calculateTrimester, mealRecomendation } from "./form.service.js";
+import { getPregnancyWeeks } from "./pregnancy.service.js";
 import { supabase } from "../lib/supabase.js";
 
 interface dashboardData {
@@ -124,10 +125,8 @@ export class DashboardService {
 
         const avatar = await usersService.avatarUrl(userId);
 
-        const profileData = await getPregnancyProfile(userId);
-
-        const trimester = calculateTrimester(profileData.weeks);
-        const weeks = profileData.weeks;
+        const weeks = await getPregnancyWeeks(userId);
+        const trimester = calculateTrimester(weeks);
         
         return {
             avatarUrl: avatar,
@@ -183,6 +182,7 @@ export class DashboardService {
 
     async dailyProgress(userId: string): Promise<dailyProgressResponse> {
         const profileData = await getPregnancyProfile(userId);
+        const weeks = await getPregnancyWeeks(userId);
 
         const today = new Date();
         const day = String(today.getDate()).padStart(2, '0');
@@ -231,6 +231,7 @@ export class DashboardService {
 
     async weeklyProgress(userId: string): Promise<weeklyProgressResponse> {
         const profileData = await getPregnancyProfile(userId);
+        const weeks = await getPregnancyWeeks(userId);
 
         const today = new Date();
         const dayOfWeek = today.getDay();
@@ -345,7 +346,6 @@ export class DashboardService {
     }
 
     async createMealLog(userId: string, foodId: number, quantity: number, dateString: string) {
-        // Check if food exists
         const [foodData] = await db
             .select()
             .from(foods)
@@ -356,7 +356,6 @@ export class DashboardService {
             throw new Error("Food not found");
         }
 
-        // Create new meal log
         const [newMeal] = await db
             .insert(meal_log)
             .values({
@@ -375,7 +374,6 @@ export class DashboardService {
     }
 
     async editMealLog(userId: string, mealLogId: string, foodId?: number, quantity?: number) {
-        // Check if meal log exists and belongs to user
         const [existingMeal] = await db
             .select()
             .from(meal_log)
@@ -391,7 +389,6 @@ export class DashboardService {
             throw new Error("Meal log not found");
         }
 
-        // If foodId is provided, verify it exists
         if (foodId) {
             const [foodData] = await db
                 .select()
@@ -404,7 +401,6 @@ export class DashboardService {
             }
         }
 
-        // Build update object with provided fields
         const updateData: { food_id?: number; quantity?: number; updated_at: Date } = {
             updated_at: new Date()
         };
@@ -412,7 +408,6 @@ export class DashboardService {
         if (foodId) updateData.food_id = foodId;
         if (quantity) updateData.quantity = quantity;
 
-        // Update meal log with all provided changes
         await db
             .update(meal_log)
             .set(updateData)

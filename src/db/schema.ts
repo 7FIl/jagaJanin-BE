@@ -46,7 +46,7 @@ export const pregnancy_profile = pgTable("pregnancy_profile", {
     user_id: uuid("user_id").notNull().references(() => users.id),
     food_preference: integer("food_preference").notNull().references(() => foods.id),
     activity_level: integer("activity_level").notNull(),
-    weeks: integer("weeks").notNull(),
+    initial_weeks: integer("initial_weeks").notNull(),
     height: decimal("height", { precision: 5, scale: 2 }).notNull(),
     weight: decimal("weight", { precision: 5, scale: 2 }).notNull(),    
     age: integer("age").notNull(),
@@ -54,6 +54,7 @@ export const pregnancy_profile = pgTable("pregnancy_profile", {
     bmr: integer("bmr").notNull(),
     daily_calories: integer("daily_calories").notNull(),
     meal_calories: integer("meal_calories").notNull(),
+    created_at: timestamp("created_at").notNull().defaultNow(),
 });
 
 export const refresh_tokens = pgTable("refresh_tokens", {
@@ -70,4 +71,41 @@ export const otp = pgTable("otp", {
     code: varchar("code", { length: 100 }).notNull(),
     expires_at: timestamp("expires_at").notNull(),
     created_at: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const kia = pgTable("kia", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    user_id: uuid("user_id").notNull().references(() => users.id),
+    trimester: integer("trimester").notNull(),
+    hpl: timestamp("hpl").notNull(),
+    hpht: timestamp("hpht").notNull(),
+});
+
+export const checkup = pgTable("checkup", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    kia_id: uuid("kia_id").notNull().references(() => kia.id),
+    facility_name: varchar("facility_name", { length: 100 }).notNull().default("-"),
+    doctor_name: varchar("doctor_name", { length: 100 }).notNull().default("-"),
+    blood_pressure: varchar("blood_pressure", { length: 10 }).notNull().default("-"),
+    weight: decimal("weight", { precision: 5, scale: 2 }).notNull().default('0.00'),
+    height: decimal("height", { precision: 5, scale: 2 }).notNull().default('0.00'),
+    fundal_height: decimal("fundal_height", { precision: 5, scale: 2 }).notNull().default('0.00'),
+    lila: integer("lila").notNull().default(0),
+    blood_type: varchar("blood_type", { length: 3 }).notNull().default("-"),
+    hemoglobin: decimal("hemoglobin", { precision: 5, scale: 2 }).notNull().default('0.00'),
+    blood_sugar: integer("blood_sugar").notNull().default(0),
+    urine_protein: varchar("urine_protein", { length: 10 }).notNull().default("-"),
+    checkup_date: timestamp("checkup_date").notNull(),
+});
+
+export const checklist = pgTable("checklist", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    kia_id: uuid("kia_id").notNull().references(() => kia.id),
+    fetal_heatbeat: boolean("fetal_heartbeat").notNull().default(false),
+    counseling: boolean("counseling").notNull().default(false),
+    tetanus_immunization: boolean("tetanus_immunization").notNull().default(false),
+    health_screening: boolean("health_screening").notNull().default(false),
+    iron_suplement: boolean("iron_supplementation").notNull().default(false),
+    ppia: boolean("ppia").notNull().default(false),
+    is_completed: boolean("is_completed").notNull().default(false),
 });

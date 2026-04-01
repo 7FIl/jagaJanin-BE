@@ -9,6 +9,7 @@ import { authPlugin } from "./plugins/auth.plugins.js";
 import "dotenv/config";
 import { usersRoutes } from "./routes/users.routes.js";
 import { dashboardRoutes } from "./routes/dashboard.route.js";
+import { kiaRoutes } from "./routes/kia.routes.js";
 
 const app = fastify();
 
@@ -57,6 +58,7 @@ app.register(async function (app) {
 app.register(formRoutes, { prefix: "/api/v1/forms" });
 app.register(usersRoutes, { prefix: "/api/v1/users" });
 app.register(dashboardRoutes, { prefix: "/api/v1/dashboard" });
+app.register(kiaRoutes, { prefix: "/api/v1/kia" });
 
 app.listen({ port: Number(PORT) }, (err, address) => {
   if (err) {

@@ -57,6 +57,13 @@
       "when": 1775018911285,
       "tag": "0007_quick_tarantula",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1775063493582,
+      "tag": "0008_sloppy_gunslinger",
+      "breakpoints": true
     }
   ]
 }

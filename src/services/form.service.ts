@@ -13,15 +13,6 @@ export interface formInput {
     mealPerDay: number;
 }
 
-interface formResponse {
-    name: string;
-    age: number;
-    trimester: number;
-    aktivitas: string;
-    calories: number;
-    mealRecommendation: mealRecomendationResponse;
-}
-
 export interface mealRecomendationResponse {
     stapleName: string;
     stapleQty: number;
@@ -35,7 +26,7 @@ interface onboardingResponse {
     name: string;
     age: number;
     trimester: number;
-    aktivitas: string;
+    activityLevel: string;
     calories: number;
     mealRecommendation: mealRecomendationResponse;
 }
@@ -199,7 +190,7 @@ export class FormService {
             user_id: id,
             food_preference: input.foodPreference,
             activity_level: input.activityLevel,
-            weeks: input.weeks,
+            initial_weeks: input.weeks,
             height: input.height.toString(),
             weight: input.weight.toString(),
             age: input.age,
@@ -219,14 +210,13 @@ export class FormService {
             input.foodPreference
         );
 
-        const trimester = calculateTrimester(input.weeks);
         const calories = pregnancyProfile.daily_calories;
 
         return {
             name: user.full_name,
             age: pregnancyProfile.age,
-            trimester: trimester,
-            aktivitas: activityLevelToString(input.activityLevel),
+            trimester: calculateTrimester(pregnancyProfile.initial_weeks),
+            activityLevel: activityLevelToString(input.activityLevel),
             calories: calories,
             mealRecommendation: mealRecommendation
         };
