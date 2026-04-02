@@ -133,7 +133,7 @@ export class AuthService {
         return rawToken;
     }
 
-    async generateAccessToken(user: userResponse, fastify: FastifyInstance): Promise<string> {
+    async generateAccessToken(user: { id: string; role: string }, fastify: FastifyInstance): Promise<string> {
         return fastify.jwt.sign(
             { sub: user.id, role: user.role },
             { expiresIn: jwtExp }

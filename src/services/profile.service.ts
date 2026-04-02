@@ -38,7 +38,7 @@ export async function getUserId(id: string) {
 }
 
 
-export class UsersService {
+export class ProfileService {
 
     async userProfile(userId: string): Promise<userProfileResponse> {
         const user = await getUserId(userId);
@@ -215,4 +215,4 @@ export class UsersService {
     }
 }
 
-export const usersService = new UsersService();
+export const profileService = new ProfileService();

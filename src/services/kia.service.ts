@@ -414,12 +414,12 @@ export class kiaService {
 
             return {
                 checklist: [
-                    { name: "Fetal Heartbeat", completed: newChecklist.fetal_heatbeat },
-                    { name: "Counseling", completed: newChecklist.counseling },
-                    { name: "Tetanus Immunization", completed: newChecklist.tetanus_immunization },
-                    { name: "Health Screening", completed: newChecklist.health_screening },
-                    { name: "Iron Supplementation", completed: newChecklist.iron_suplement },
-                    { name: "PPIA", completed: newChecklist.ppia }
+                    { name: "Fetal Heartbeat", completed: newChecklist!.fetal_heatbeat },
+                    { name: "Counseling", completed: newChecklist!.counseling },
+                    { name: "Tetanus Immunization", completed: newChecklist!.tetanus_immunization },
+                    { name: "Health Screening", completed: newChecklist!.health_screening },
+                    { name: "Iron Supplementation", completed: newChecklist!.iron_suplement },
+                    { name: "PPIA", completed: newChecklist!.ppia }
                 ].map(item => item.name),
                 isCompleted: false,
             };

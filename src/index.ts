@@ -7,9 +7,12 @@ import { authRoutes } from "./routes/auth.routes.js";
 import { formRoutes } from "./routes/form.routes.js";
 import { authPlugin } from "./plugins/auth.plugins.js";
 import "dotenv/config";
-import { usersRoutes } from "./routes/users.routes.js";
+import { profileRoutes } from "./routes/profile.routes.js";
 import { dashboardRoutes } from "./routes/dashboard.route.js";
 import { kiaRoutes } from "./routes/kia.routes.js";
+import { consultation } from "./db/schema.js";
+import { consultationRoutes } from "./routes/consultation.routes.js";
+import { paymentRoutes } from "./routes/payment.routes.js";
 
 const app = fastify();
 
@@ -56,9 +59,11 @@ app.register(async function (app) {
 });
 
 app.register(formRoutes, { prefix: "/api/v1/forms" });
-app.register(usersRoutes, { prefix: "/api/v1/users" });
+app.register(profileRoutes, { prefix: "/api/v1/profile" });
 app.register(dashboardRoutes, { prefix: "/api/v1/dashboard" });
 app.register(kiaRoutes, { prefix: "/api/v1/kia" });
+app.register(consultationRoutes, { prefix: "/api/v1/consultation" });
+app.register(paymentRoutes, { prefix: "/api/v1/payment" });
 
 app.listen({ port: Number(PORT) }, (err, address) => {
   if (err) {

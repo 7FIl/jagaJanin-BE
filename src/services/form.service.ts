@@ -1,7 +1,7 @@
 import { db } from "../db/index.js";
 import { foods, pregnancy_profile, users, serving } from "../db/schema.js";
 import { eq } from "drizzle-orm";
-import { getUserId } from "./users.service.js";
+import { getUserId } from "./profile.service.js";
 
 export interface formInput {
     foodPreference: number;

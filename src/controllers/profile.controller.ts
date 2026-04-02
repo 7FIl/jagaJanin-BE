@@ -1,14 +1,14 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { updateProfileInput, updatePasswordInput, usersService } from "../services/users.service.js";
+import { updateProfileInput, updatePasswordInput, profileService } from "../services/profile.service.js";
 
-export class UsersController {
+export class ProfileController {
 
     async getUserProfile(
         request: FastifyRequest,
         reply: FastifyReply) {
         try {
             const userId = request.user.sub;
-            const profile = await usersService.userProfile(userId);
+            const profile = await profileService.userProfile(userId);
             return reply.status(200).send({
                 success: true,
                 data: profile,
@@ -31,7 +31,7 @@ export class UsersController {
             const userId = request.user.sub;
             const input = request.body;
 
-            const updatedProfile = await usersService.updateUserProfile(userId, input.fullName, input.email, input.password);
+            const updatedProfile = await profileService.updateUserProfile(userId, input.fullName, input.email, input.password);
             return reply.status(200).send({
                 success: true,
                 data: updatedProfile,
@@ -53,7 +53,7 @@ export class UsersController {
         try {
             const userId = request.user.sub;
             const { foodPreference } = request.body;
-            await usersService.updatePreference(userId, foodPreference);
+            await profileService.updatePreference(userId, foodPreference);
             return reply.status(200).send({
                 success: true,
                 message: "Food preference updated successfully",
@@ -74,7 +74,7 @@ export class UsersController {
         const userId = request.user.sub;
         const input = request.body;
         try {
-            await usersService.editPassword(userId, input.currentPassword, input.newPassword);
+            await profileService.editPassword(userId, input.currentPassword, input.newPassword);
             return reply.status(200).send({
                 success: true,
                 message: "Password updated successfully",
@@ -96,7 +96,7 @@ export class UsersController {
             const userId = request.user.sub;
             const input = request.body;
 
-            const updatedPhoneNumber = await usersService.updatePhoneNumber(userId, input.phoneNumber);
+            const updatedPhoneNumber = await profileService.updatePhoneNumber(userId, input.phoneNumber);
             return reply.status(200).send({
                 success: true,
                 data: { phoneNumber: updatedPhoneNumber },
@@ -118,7 +118,7 @@ export class UsersController {
         try {
             const userId = request.user.sub;
             const file = await request.file();
-            await usersService.updateAvatar(userId, file);
+            await profileService.updateAvatar(userId, file);
             return reply.status(200).send({
                 success: true,
                 message: "Avatar updated successfully",
@@ -138,7 +138,7 @@ export class UsersController {
         reply: FastifyReply) {
         try {
             const userId = request.user.sub;
-            const avatarUrl = await usersService.avatarUrl(userId);
+            const avatarUrl = await profileService.avatarUrl(userId);
             return reply.status(200).send({
                 success: true,
                 data: { avatarUrl },
@@ -156,4 +156,4 @@ export class UsersController {
 
 }
 
-export const usersController = new UsersController();
+export const profileController = new ProfileController();

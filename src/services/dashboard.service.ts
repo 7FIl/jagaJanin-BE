@@ -1,7 +1,7 @@
 import { eq, and, gte, lte, sql } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { foods, meal_log, pregnancy_profile, serving } from "../db/schema.js";
-import { usersService } from "./users.service.js";
+import { profileService } from "./profile.service.js";
 import { calculateTrimester, mealRecomendation } from "./form.service.js";
 import { getPregnancyWeeks } from "./pregnancy.service.js";
 import { supabase } from "../lib/supabase.js";
@@ -123,7 +123,7 @@ export class DashboardService {
 
     async getDashboardData(userId: string): Promise<dashboardData> {
 
-        const avatar = await usersService.avatarUrl(userId);
+        const avatar = await profileService.avatarUrl(userId);
 
         const weeks = await getPregnancyWeeks(userId);
         const trimester = calculateTrimester(weeks);

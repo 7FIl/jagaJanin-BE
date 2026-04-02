@@ -1,4 +1,7 @@
-import { boolean, decimal, integer, pgTable, serial, text, timestamp, uuid, varchar, } from "drizzle-orm/pg-core";
+import { anonymousRole } from "drizzle-orm/neon";
+import { boolean, decimal, integer, pgTable, serial, text, time, timestamp, uuid, varchar, } from "drizzle-orm/pg-core";
+import { create } from "node:domain";
+import { start } from "node:repl";
 
 export const users = pgTable("users", {
     id: uuid("id").primaryKey().defaultRandom(),
@@ -109,3 +112,55 @@ export const checklist = pgTable("checklist", {
     ppia: boolean("ppia").notNull().default(false),
     is_completed: boolean("is_completed").notNull().default(false),
 });
+
+export const payment = pgTable("payment", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    user_id: uuid("user_id").notNull().references(() => users.id),
+    amount: integer("amount").notNull(),
+    status: varchar("status", { length: 20 }).notNull().default("pending"),
+    external_id: text("external_id").notNull(),
+    created_at: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const doctor_profile = pgTable("doctor_profile", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    user_id: uuid("user_id").notNull().references(() => users.id),
+    specialization: varchar("specialization", { length: 100 }).notNull(),
+    work_place: varchar("work_place", { length: 50 }).notNull(),
+    experience_years: integer("experience_years").notNull(),
+    rating: decimal("rating", { precision: 3, scale: 2 }).notNull().default('0.00'),
+    cumulative_patients: integer("cumulative_patients").notNull().default(0),
+    about: varchar("about", { length: 255 } ).notNull().default(""),
+    consultation_fee: integer("consultation_fee").notNull().default(0),
+});
+
+export const ratings = pgTable("ratings", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    doctor_id: uuid("doctor_id").notNull().references(() => doctor_profile.id),
+    user_id: uuid("user_id").notNull().references(() => users.id),
+    rating: integer("rating").notNull(),
+    created_at: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const consultation = pgTable("consultation", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    doctor_id: uuid("doctor_id").notNull().references(() => doctor_profile.id),
+    user_id: uuid("user_id").notNull().references(() => users.id),
+    start_time: timestamp("start_time").notNull(),
+    end_time: timestamp("end_time").notNull(),
+    is_done: boolean("is_done").notNull().default(false),
+    is_paid: boolean("is_paid").notNull().default(false),
+    created_at: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const practice_schedule = pgTable("practice_schedule", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    doctor_id: uuid("doctor_id").notNull().references(() => doctor_profile.id),
+    day_start: integer("day_start").notNull(),
+    day_end: integer("day_end").notNull(),
+    start_time: time("start_time").notNull(),
+    end_time: time("end_time").notNull(),
+    session: varchar("session", { length: 20 }).notNull(),
+});
+
+

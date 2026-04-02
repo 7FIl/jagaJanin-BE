@@ -47,6 +47,9 @@ importers:
       resend:
         specifier: ^6.10.0
         version: 6.10.0
+      xendit-node:
+        specifier: ^7.0.0
+        version: 7.0.0
     devDependencies:
       '@types/bcrypt':
         specifier: ^6.0.0
@@ -1622,6 +1625,10 @@ packages:
       utf-8-validate:
         optional: true
 
+  xendit-node@7.0.0:
+    resolution: {integrity: sha512-atsCQ9femoWLu+hU5rY0TZ+ZhqSYbpTtABZN7rGMhhBh1xLhTuY1rgLfoaXzFiRt3eOQRqsew78wPUcQn1QckA==}
+    engines: {node: '>=18.0.0'}
+
   xtend@4.0.2:
     resolution: {integrity: sha512-LKYU1iAXJXUgAXn9URjiu+MWhyUXHsvfp7mcuYm9dSUKK0/CjtrUwFAxD82/mCWbtLsGjFIad0wIsod4zrTAEQ==}
     engines: {node: '>=0.4'}
@@ -2855,5 +2862,7 @@ snapshots:
       stackback: 0.0.2
 
   ws@8.19.0: {}
+
+  xendit-node@7.0.0: {}
 
   xtend@4.0.2: {}
