@@ -405,7 +405,7 @@ export class kiaService {
             .limit(1);
 
         if (!checklistData) {
-            await db
+            const [newChecklist] = await db
                 .insert(checklist)
                 .values({
                     kia_id: kiaData.id,
@@ -414,12 +414,12 @@ export class kiaService {
 
             return {
                 checklist: [
-                    { name: "Fetal Heartbeat", completed: checklistData!.fetal_heatbeat },
-                    { name: "Counseling", completed: checklistData!.counseling },
-                    { name: "Tetanus Immunization", completed: checklistData!.tetanus_immunization },
-                    { name: "Health Screening", completed: checklistData!.health_screening },
-                    { name: "Iron Supplementation", completed: checklistData!.iron_suplement },
-                    { name: "PPIA", completed: checklistData!.ppia }
+                    { name: "Fetal Heartbeat", completed: newChecklist.fetal_heatbeat },
+                    { name: "Counseling", completed: newChecklist.counseling },
+                    { name: "Tetanus Immunization", completed: newChecklist.tetanus_immunization },
+                    { name: "Health Screening", completed: newChecklist.health_screening },
+                    { name: "Iron Supplementation", completed: newChecklist.iron_suplement },
+                    { name: "PPIA", completed: newChecklist.ppia }
                 ].map(item => item.name),
                 isCompleted: false,
             };
