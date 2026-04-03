@@ -72,12 +72,7 @@ export const checkPaymentStatusSchema = {
                     type: "object",
                     description: "Payment status information",
                     properties: {
-                        invoiceId: { type: "string", description: "Xendit invoice ID" },
-                        status: { type: "string", enum: ["PAID", "PENDING", "EXPIRED"], description: "Current payment status" },
-                        amount: { type: "number", description: "Invoice amount in IDR" },
-                        paidAmount: { type: "number", description: "Amount paid so far" },
-                        paidAt: { type: "string", format: "date-time", description: "Payment timestamp (null if not paid)" },
-                        expiredAt: { type: "string", format: "date-time", description: "Invoice expiration time" }
+                        status: { type: "string", enum: ["PAID", "PENDING", "EXPIRED"], description: "Current payment status" }
                     }
                 },
                 message: { type: "string", description: "Success message" }
@@ -132,15 +127,6 @@ export const handlePaymentWebhookSchema = {
             type: "object",
             properties: {
                 success: { type: "boolean", description: "Operation success status" },
-                data: {
-                    type: "object",
-                    description: "Updated consultation booking status",
-                    properties: {
-                        consultationId: { type: "string", description: "Consultation ID that was updated" },
-                        paymentStatus: { type: "string", enum: ["PAID", "PENDING", "EXPIRED"], description: "New payment status" },
-                        bookingStatus: { type: "string", description: "New consultation booking status (PAID→CONFIRMED)" }
-                    }
-                },
                 message: { type: "string", description: "Success message" }
             }
         },

@@ -137,10 +137,7 @@ export class ConsultationService {
         const totalPages = Math.ceil(total / limit);
         
         // Paginate in memory
-        const paginatedDoctors = allDoctors.slice(offset, offset + limit).map(doc => ({
-            ...doc,
-            rating: String(doc.rating)
-        }));
+        const paginatedDoctors = allDoctors.slice(offset, offset + limit);
 
         return {
             data: paginatedDoctors as doctorRecomendation[],
@@ -154,7 +151,7 @@ export class ConsultationService {
     }
 
     async getDoctorProfile(doctorId: string): Promise<doctorProfileResponse> {
-        const doctorDataArray = await db
+        const [doctorData] = await db
             .select({
                 id: doctor_profile.id,
                 name: users.full_name,
@@ -170,8 +167,6 @@ export class ConsultationService {
             .from(doctor_profile)
             .innerJoin(users, eq(doctor_profile.user_id, users.id))
             .where(eq(doctor_profile.id, doctorId));
-        
-        const doctorData = doctorDataArray.length > 0 ? doctorDataArray[0] : null;
 
         if (!doctorData) {
             throw new Error("Doctor not found");
@@ -198,7 +193,6 @@ export class ConsultationService {
 
         return {
             ...doctorData,
-            rating: String(doctorData.rating),
             practiceSchedule: schedules,
         };
     }

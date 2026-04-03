@@ -17,22 +17,31 @@ export const getMealLogsSchema = {
 			properties: {
 				success: { type: "boolean", description: "Operation success status" },
 				data: {
-					type: "array",
-					description: "List of meal logs for the specified date",
-					items: {
-						type: "object",
-						properties: {
-							id: { type: "string", description: "Meal log ID" },
-							foodId: { type: "integer", description: "Food item ID" },
-							foodName: { type: "string", description: "Food name" },
-							quantity: { type: "integer", description: "Quantity consumed" },
-							calories: { type: "number", description: "Total calories for this meal" },
-							protein: { type: "number", description: "Protein in grams" },
-							carbs: { type: "number", description: "Carbohydrates in grams" },
-							fat: { type: "number", description: "Fat in grams" },
-							date: { type: "string", format: "date", description: "Date of meal" },
-							createdAt: { type: "string", format: "date-time", description: "When the log was created" }
-						}
+					type: "object",
+					description: "Meal logs with summary for the specified date",
+					properties: {
+						date: { type: "string", description: "Date in DD-MM-YYYY format" },
+						meals: {
+							type: "array",
+							description: "List of meal logs for the specified date",
+							items: {
+								type: "object",
+								properties: {
+									mealLogId: { type: "string", description: "Meal log ID" },
+									foodId: { type: "integer", description: "Food item ID" },
+									foodName: { type: "string", description: "Food name" },
+									quantity: { type: "integer", description: "Quantity consumed" },
+									calories: { type: "number", description: "Calories per serving" },
+									gram: { type: "number", description: "Grams per serving" },
+									protein: { type: "number", description: "Protein in grams per serving" },
+									fat: { type: "number", description: "Fat in grams per serving" },
+									createdAt: { type: "string", format: "date-time", description: "When the log was created" },
+									updatedAt: { type: "string", format: "date-time", description: "When the log was last updated" }
+								}
+							}
+						},
+						totalCalories: { type: "number", description: "Total calories for the day" },
+						mealCount: { type: "integer", description: "Number of meals logged" }
 					}
 				},
 				message: { type: "string", description: "Success message" }
@@ -198,29 +207,43 @@ export const getMealRecommendationsSchema = {
 			properties: {
 				success: { type: "boolean", description: "Operation success status" },
 				data: {
-					type: "array",
-					description: "List of recommended meals",
-					items: {
-						type: "object",
-						properties: {
-							id: { type: "string", description: "Meal recommendation ID" },
-							name: { type: "string", description: "Food name" },
-							calories: { type: "number", description: "Calorie content" },
-							protein: { type: "number", description: "Protein in grams" },
-							carbs: { type: "number", description: "Carbohydrates in grams" },
-							fat: { type: "number", description: "Fat in grams" },
-							nutrition: {
-								type: "object",
-								description: "Detailed nutrition info",
-								properties: {
-									calcium: { type: "number" },
-									iron: { type: "number" },
-									folic_acid: { type: "number" }
-								}
-							},
-							servingSize: { type: "string", description: "Recommended serving size" },
-							category: { type: "string", description: "Food category (protein, vegetables, grains, etc.)" }
-						}
+					type: "object",
+					description: "Daily meal recommendations by category",
+					properties: {
+						staple: {
+							type: "object",
+							description: "Staple food recommendation",
+							properties: {
+								name: { type: "string" },
+								quantity: { type: "integer" },
+								gram: { type: "number" },
+								price: { type: "number" },
+								picture: { type: "string", format: "uri" }
+							}
+						},
+						side: {
+							type: "object",
+							description: "Side dish recommendation",
+							properties: {
+								name: { type: "string" },
+								quantity: { type: "integer" },
+								gram: { type: "number" },
+								price: { type: "number" },
+								picture: { type: "string", format: "uri" }
+							}
+						},
+						vegetable: {
+							type: "object",
+							description: "Vegetable recommendation",
+							properties: {
+								name: { type: "string" },
+								quantity: { type: "integer" },
+								gram: { type: "number" },
+								price: { type: "number" },
+								picture: { type: "string", format: "uri" }
+							}
+						},
+						totalPrice: { type: "number", description: "Total price for all meals" }
 					}
 				},
 				message: { type: "string", description: "Success message" }

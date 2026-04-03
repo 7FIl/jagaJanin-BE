@@ -136,6 +136,13 @@ export const updatePhoneNumberSchema = {
             type: "object",
             properties: {
                 success: { type: "boolean" },
+                data: {
+                    type: "object",
+                    description: "Updated phone number",
+                    properties: {
+                        phoneNumber: { type: "string", description: "Updated phone number" }
+                    }
+                },
                 message: { type: "string" }
             }
         }
@@ -200,13 +207,7 @@ export const updateAvatarSchema = {
             type: "object",
             properties: {
                 success: { type: "boolean" },
-                message: { type: "string" },
-                data: {
-                    type: "object",
-                    properties: {
-                        avatarUrl: { type: "string" }
-                    }
-                }
+                message: { type: "string" }
             }
         },
         400: {

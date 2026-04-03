@@ -17,19 +17,32 @@ export const getDoctorRecommendationsSchema = {
             properties: {
                 success: { type: "boolean", description: "Operation success status" },
                 data: {
-                    type: "array",
-                    description: "List of recommended doctors",
-                    items: {
-                        type: "object",
-                        properties: {
-                            id: { type: "string", description: "Doctor unique identifier" },
-                            name: { type: "string", description: "Doctor full name" },
-                            specialty: { type: "string", description: "Medical specialty" },
-                            experience: { type: "string", description: "Years of experience" },
-                            rating: { type: "number", minimum: 0, maximum: 5, description: "Average rating (0-5 stars)" },
-                            consultationFee: { type: "number", description: "Fee per consultation in IDR" },
-                            avatar: { type: "string", format: "uri", description: "Doctor profile image URL" },
-                            availabilityStatus: { type: "string", enum: ["AVAILABLE", "BUSY", "OFFLINE"], description: "Current availability status" }
+                    type: "object",
+                    description: "Paginated list of recommended doctors",
+                    properties: {
+                        data: {
+                            type: "array",
+                            description: "List of recommended doctors",
+                            items: {
+                                type: "object",
+                                properties: {
+                                    name: { type: "string", description: "Doctor full name" },
+                                    specialty: { type: "string", description: "Medical specialty" },
+                                    experience: { type: "integer", description: "Years of experience" },
+                                    fee: { type: "number", description: "Fee per consultation in IDR" },
+                                    rating: { type: "string", description: "Average rating (0-5 stars)" }
+                                }
+                            }
+                        },
+                        pagination: {
+                            type: "object",
+                            description: "Pagination metadata",
+                            properties: {
+                                page: { type: "integer", description: "Current page number" },
+                                limit: { type: "integer", description: "Items per page" },
+                                total: { type: "integer", description: "Total number of doctors" },
+                                totalPages: { type: "integer", description: "Total number of pages" }
+                            }
                         }
                     }
                 },
@@ -72,19 +85,24 @@ export const getDoctorProfileSchema = {
                         id: { type: "string", description: "Doctor unique identifier" },
                         name: { type: "string", description: "Doctor full name" },
                         specialty: { type: "string", description: "Medical specialty" },
-                        licenseNumber: { type: "string", description: "Professional license number" },
-                        experience: { type: "string", description: "Years of experience" },
-                        rating: { type: "number", minimum: 0, maximum: 5, description: "Average rating from consultations" },
-                        consultationCount: { type: "integer", description: "Total number of consultations" },
+                        workPlace: { type: "string", description: "Primary workplace" },
+                        experience: { type: "integer", description: "Years of experience" },
+                        patients: { type: "integer", description: "Total number of patients" },
+                        rating: { type: "string", description: "Average rating from consultations" },
+                        about: { type: "string", description: "Professional bio/about section" },
                         consultationFee: { type: "number", description: "Fee per consultation in IDR" },
-                        bio: { type: "string", description: "Professional bio/about section" },
-                        avatar: { type: "string", format: "uri", description: "Profile picture URL" },
-                        availableHours: {
-                            type: "object",
+                        practiceSchedule: {
+                            type: "array",
                             description: "Weekly availability schedule",
-                            properties: {
-                                Monday: { type: "array", items: { type: "string" } },
-                                Tuesday: { type: "array", items: { type: "string" } }
+                            items: {
+                                type: "object",
+                                properties: {
+                                    startDay: { type: "string", description: "Schedule start day" },
+                                    endDay: { type: "string", description: "Schedule end day" },
+                                    startTime: { type: "string", description: "Daily start time" },
+                                    endTime: { type: "string", description: "Daily end time" },
+                                    session: { type: "string", description: "Session type" }
+                                }
                             }
                         }
                     }
@@ -221,7 +239,7 @@ export const getConsultationHistorySchema = {
 export const getConsultationDataSchema = {
     tags: ["Consultation"],
     summary: "Get consultation data",
-    description: "Get consultation data and summary for pregnancy tracking",
+    description: "Get next scheduled consultation and recommended doctors list",
     response: {
         200: {
             description: "Consultation data retrieved successfully",
@@ -230,33 +248,35 @@ export const getConsultationDataSchema = {
                 success: { type: "boolean", description: "Operation success status" },
                 data: {
                     type: "object",
-                    description: "Aggregated consultation data",
+                    description: "Consultation data with schedule and recommendations",
                     properties: {
-                        totalConsultations: { type: "integer", description: "Total number of consultations" },
-                        completedConsultations: { type: "integer", description: "Completed consultations" },
-                        upcomingConsultations: { type: "integer", description: "Scheduled upcoming consultations" },
-                        totalAmountSpent: { type: "number", description: "Total amount spent on consultations in IDR" },
-                        averageRating: { type: "number", minimum: 0, maximum: 5, description: "Average rating given to doctors" },
-                        frequentDoctors: {
-                            type: "array",
-                            description: "Top doctors consulted",
-                            items: {
-                                type: "object",
-                                properties: {
-                                    doctorId: { type: "string" },
-                                    doctorName: { type: "string" },
-                                    consultationCount: { type: "integer" }
-                                }
+                        consulationSchedule: {
+                            type: "object",
+                            description: "Next scheduled consultation",
+                            properties: {
+                                id: { type: "string", description: "Consultation ID" },
+                                date: { type: "string", format: "date", description: "Consultation date" },
+                                doctorName: { type: "string", description: "Doctor name" }
                             }
                         },
-                        lastConsultation: {
+                        doctorRecomendation: {
                             type: "object",
-                            description: "Most recent consultation details",
+                            description: "Recommended doctors list",
                             properties: {
-                                id: { type: "string" },
-                                doctorName: { type: "string" },
-                                date: { type: "string", format: "date-time" },
-                                status: { type: "string" }
+                                doctors: {
+                                    type: "array",
+                                    description: "List of recommended doctors",
+                                    items: {
+                                        type: "object",
+                                        properties: {
+                                            name: { type: "string", description: "Doctor full name" },
+                                            specialty: { type: "string", description: "Medical specialty" },
+                                            experience: { type: "integer", description: "Years of experience" },
+                                            fee: { type: "number", description: "Consultation fee in IDR" },
+                                            rating: { type: "string", description: "Average rating" }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -307,15 +327,7 @@ export const bookConsultationSchema = {
                     type: "object",
                     description: "Booking confirmation details",
                     properties: {
-                        consultationId: { type: "string", description: "New consultation unique identifier" },
-                        doctorId: { type: "string", description: "Doctor ID" },
-                        doctorName: { type: "string", description: "Doctor full name" },
-                        specialty: { type: "string", description: "Doctor specialty" },
-                        startTime: { type: "string", format: "date-time", description: "Confirmed start time" },
-                        endTime: { type: "string", format: "date-time", description: "Confirmed end time" },
-                        status: { type: "string", description: "Booking status (CONFIRMED/PENDING)" },
-                        consultationFee: { type: "number", description: "Fee to be paid in IDR" },
-                        paymentStatus: { type: "string", description: "Payment status (PENDING/PAID)" }
+                        consultationId: { type: "string", description: "New consultation unique identifier" }
                     }
                 },
                 message: { type: "string", description: "Success message" }
@@ -360,16 +372,6 @@ export const giveRatingSchema = {
             type: "object",
             properties: {
                 success: { type: "boolean", description: "Operation success status" },
-                data: {
-                    type: "object",
-                    description: "Rating submission confirmation",
-                    properties: {
-                        consultationId: { type: "string" },
-                        ratingValue: { type: "number" },
-                        submittedAt: { type: "string", format: "date-time", description: "When the rating was submitted" },
-                        doctorNewAverageRating: { type: "number", description: "Doctor's updated average rating" }
-                    }
-                },
                 message: { type: "string", description: "Success message" }
             }
         },
@@ -403,7 +405,7 @@ export const giveRatingSchema = {
 export const getPaymentConfirmationSchema = {
     tags: ["Consultation"],
     summary: "Get payment confirmation",
-    description: "Get payment confirmation and invoice details for a consultation",
+    description: "Get payment confirmation and fee details for a consultation",
     params: {
         type: "object",
         required: ["consultationId"],
@@ -420,17 +422,20 @@ export const getPaymentConfirmationSchema = {
                 success: { type: "boolean", description: "Operation success status" },
                 data: {
                     type: "object",
-                    description: "Payment and invoice information",
+                    description: "Payment and fee information",
                     properties: {
-                        consultationId: { type: "string", description: "Consultation ID" },
                         doctorName: { type: "string", description: "Doctor name" },
-                        consultationDate: { type: "string", format: "date-time", description: "Consultation date/time" },
-                        amount: { type: "number", description: "Consultation fee in IDR" },
-                        status: { type: "string", enum: ["PAID", "PENDING", "FAILED"], description: "Payment status" },
-                        paidAt: { type: "string", format: "date-time", description: "Payment timestamp (null if not paid)" },
-                        invoiceNumber: { type: "string", description: "Invoice/receipt number" },
-                        paymentMethod: { type: "string", description: "Payment method used" },
-                        transactionId: { type: "string", description: "Payment gateway transaction ID" }
+                        specialty: { type: "string", description: "Doctor specialty" },
+                        date: { type: "string", format: "date", description: "Consultation date" },
+                        time: { type: "string", description: "Consultation time" },
+                        doctorFee: { type: "number", description: "Doctor consultation fee in IDR" },
+                        platformFee: { type: "number", description: "Platform service fee in IDR" },
+                        totalFee: { type: "number", description: "Total fee to be paid in IDR" },
+                        paymentMethod: {
+                            type: "array",
+                            description: "Available payment methods",
+                            items: { type: "string" }
+                        }
                     }
                 },
                 message: { type: "string", description: "Success message" }
@@ -466,23 +471,18 @@ export const getPaymentConfirmationSchema = {
 export const callDoctorSchema = {
     tags: ["Consultation"],
     summary: "Call doctor for consultation",
-    description: "Initiate a real-time video/voice consultation with doctor (must have active scheduled consultation)",
+    description: "Initiate a consultation call with doctor via WhatsApp (must have active scheduled consultation)",
     response: {
         200: {
-            description: "Consultation call initiated successfully",
+            description: "Consultation call link retrieved successfully",
             type: "object",
             properties: {
                 success: { type: "boolean", description: "Operation success status" },
                 data: {
                     type: "object",
-                    description: "Call session details",
+                    description: "Call link details",
                     properties: {
-                        consultationId: { type: "string", description: "Active consultation ID" },
-                        callLink: { type: "string", format: "uri", description: "Video call room link/URL" },
-                        callToken: { type: "string", description: "Authentication token for the call session" },
-                        startTime: { type: "string", format: "date-time", description: "When the call started" },
-                        doctorName: { type: "string", description: "Doctor's name on the call" },
-                        maxDuration: { type: "integer", description: "Maximum call duration in minutes" }
+                        link: { type: "string", format: "uri", description: "WhatsApp call link" }
                     }
                 },
                 message: { type: "string", description: "Success message" }

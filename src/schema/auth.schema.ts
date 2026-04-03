@@ -18,11 +18,13 @@ export const registerSchema = {
         201: {
             description: "User registered successfully - OTP sent to email",
             type: "object",
+            required: ["success", "data", "message"],
             properties: {
                 success: { type: "boolean", description: "Operation success status" },
                 data: {
                     type: "object",
                     description: "New user information",
+                    required: ["id", "email"],
                     properties: {
                         id: { type: "string", description: "New user ID" },
                         email: { type: "string", description: "Registered email address" }
@@ -76,20 +78,21 @@ export const loginSchema = {
         200: {
             description: "User logged in successfully",
             type: "object",
+            required: ["success", "data", "message"],
             properties: {
                 success: { type: "boolean", description: "Operation success status" },
                 data: {
                     type: "object",
                     description: "Authentication tokens and user information",
+                    required: ["user", "accessToken", "refreshToken"],
                     properties: {
                         user: {
                             type: "object",
                             description: "Authenticated user details",
+                            required: ["id", "email"],
                             properties: {
                                 id: { type: "string", description: "User ID" },
-                                email: { type: "string", description: "User email" },
-                                fullName: { type: "string", description: "User full name" },
-                                role: { type: "string", description: "User role (user/doctor/admin)" }
+                                email: { type: "string", description: "User email" }
                             }
                         },
                         accessToken: { type: "string", description: "JWT access token (valid for 1 hour)" },

@@ -32,19 +32,25 @@ export const onboardingFormSchema = {
 				success: { type: "boolean", description: "Operation success status" },
 				data: {
 					type: "object",
-					description: "Submitted form data with confirmation",
+					description: "Onboarding form response with personalized data",
 					properties: {
-						id: { type: "string", description: "Form submission unique identifier" },
-						userId: { type: "string", description: "User unique identifier" },
-						foodPreference: { type: "integer", description: "Submitted food preference ID" },
-						activityLevel: { type: "integer", description: "Submitted activity level" },
-						pregnancyWeeks: { type: "integer", description: "Recorded pregnancy weeks" },
-						height: { type: "number", description: "Recorded height in cm" },
-						weight: { type: "number", description: "Recorded weight in kg" },
-						age: { type: "integer", description: "Recorded age" },
-						mealsPerDay: { type: "integer", description: "Recorded meals per day" },
-						bmi: { type: "number", description: "Calculated BMI" },
-						submittedAt: { type: "string", format: "date-time", description: "Submission timestamp" }
+						name: { type: "string", description: "User name" },
+						age: { type: "integer", description: "User age" },
+						trimester: { type: "integer", description: "Calculated trimester (1-3)" },
+						activityLevel: { type: "string", description: "Activity level description (jarang olahraga, cukup aktif, sangat aktif)" },
+						calories: { type: "number", description: "Daily calorie target for pregnancy" },
+						mealRecommendation: {
+							type: "object",
+							description: "Initial meal recommendations",
+							properties: {
+								stapleName: { type: "string" },
+								stapleQty: { type: "integer" },
+								sideName: { type: "string" },
+								sideQty: { type: "integer" },
+								vegetableName: { type: "string" },
+								vegetableQty: { type: "integer" }
+							}
+						}
 					}
 				},
 				message: { type: "string", description: "Success message indicating onboarding completion" }
