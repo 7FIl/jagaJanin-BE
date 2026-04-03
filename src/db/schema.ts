@@ -8,6 +8,7 @@ export const users = pgTable("users", {
     phone_number: varchar("phone_number", { length: 20 }).notNull(),
     role: varchar("role", { length: 50 }).notNull().default("user"),
     avatar_url: text("avatar_url").notNull().default("avatar/default.png"),
+    google_id: text("google_id").unique(),
     complete_onboarding: boolean("complete_onboarding").notNull().default(false),
     is_verified: boolean("is_verified").notNull().default(false),
     created_at: timestamp("created_at").notNull().defaultNow(),

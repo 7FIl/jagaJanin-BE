@@ -68,3 +68,15 @@ export const resendOtpSchema = {
         additionalProperties: false
     }
 };
+
+export const googleCallbackSchema = {
+    querystring: {
+        type: "object",
+        required: ["code"],
+        properties: {
+            code: { type: "string" },
+            state: { type: "string" }
+        },
+        additionalProperties: false
+    }
+};

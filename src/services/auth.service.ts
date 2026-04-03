@@ -224,6 +224,65 @@ export class AuthService {
         return true;
     }
 
+    /**
+     * Handle Google OAuth callback
+     * Creates or updates user from Google account data
+     */
+    async handleGoogleCallback(googlePayload: any): Promise<userResponse> {
+        const { email, name, picture } = googlePayload;
+
+        if (!email) {
+            throw new Error("Email not provided from Google");
+        }
+
+        // Check if user exists
+        const [existingUser] = await db
+            .select()
+            .from(users)
+            .where(eq(users.email, email))
+            .limit(1);
+
+        if (existingUser) {
+            // Update avatar URL if provided
+            if (picture && existingUser.avatar_url !== picture) {
+                await db
+                    .update(users)
+                    .set({ avatar_url: picture })
+                    .where(eq(users.id, existingUser.id));
+            }
+
+            return {
+                id: existingUser.id,
+                fullName: existingUser.full_name,
+                email: existingUser.email,
+                role: existingUser.role,
+            };
+        }
+
+        // Create new user from Google data
+        const defaultPassword = crypto.randomBytes(32).toString("hex");
+        const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+
+        const [newUser] = await db
+            .insert(users)
+            .values({
+                full_name: name || email.split("@")[0],
+                email: email,
+                password: hashedPassword,
+                avatar_url: picture || null,
+                is_verified: true, // Google accounts are assumed verified
+                phone_number: "", // Will be updated by user later
+            })
+            .returning({
+                id: users.id,
+                fullName: users.full_name,
+                email: users.email,
+                role: users.role,
+            });
+
+        return newUser!;
+    }
+
 }
 
 export const authService = new AuthService();

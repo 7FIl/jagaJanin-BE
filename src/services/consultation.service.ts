@@ -365,7 +365,7 @@ export class ConsultationService {
             ))
             .limit(1);
 
-        if (verifyConsultation!.isDone) {
+        if (!verifyConsultation!.isDone) {
             throw new Error("Consultation is not completed yet");
         }
 

@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
 import { buildAuthController } from "../controllers/auth.controller.js";
-import { loginSchema, otpSchema, refreshTokenSchema, registerSchema, resendOtpSchema } from "../schema/auth.schema.js";
+import { loginSchema, otpSchema, refreshTokenSchema, registerSchema, resendOtpSchema, googleCallbackSchema } from "../schema/auth.schema.js";
 
 export async function authRoutes(fastify: FastifyInstance) {
     const controller = buildAuthController(fastify);
@@ -11,4 +11,6 @@ export async function authRoutes(fastify: FastifyInstance) {
     fastify.post("/logout", { onRequest: [fastify.authenticate] }, controller.logout);
     fastify.post("/verify-otp", { schema: otpSchema }, controller.verifyEmail);
     fastify.post("/resend-otp", { schema: resendOtpSchema }, controller.getOtp);
+    fastify.get("/google", controller.getGoogleLoginUrl);
+    fastify.get("/google/fallback", { schema: googleCallbackSchema }, controller.googleCallback);
 }

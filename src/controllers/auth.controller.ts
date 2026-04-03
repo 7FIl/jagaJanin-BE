@@ -1,5 +1,6 @@
 import { FastifyRequest, FastifyReply, FastifyInstance } from "fastify";
 import { authService, loginInput, otpInput, registerInput} from "../services/auth.service.js";
+import { getGoogleUser, getGoogleAuthUrl } from "../lib/google.js";
 
 export function buildAuthController(fastify: FastifyInstance) {
     return {
@@ -145,6 +146,66 @@ export function buildAuthController(fastify: FastifyInstance) {
                 const errorMessage =
                     error instanceof Error ? error.message : "An error occurred";
                 return reply.status(400).send({
+                    success: false,
+                    message: errorMessage,
+                });
+            }
+        },
+
+        async getGoogleLoginUrl(
+            request: FastifyRequest,
+            reply: FastifyReply,
+        ) {
+            try {
+                const authUrl = getGoogleAuthUrl();
+                return reply.status(200).send({
+                    success: true,
+                    data: { authUrl },
+                    message: "Google auth URL generated",
+                });
+            } catch (error) {
+                const errorMessage = error instanceof Error ? error.message : "An error occurred";
+                return reply.status(500).send({
+                    success: false,
+                    message: errorMessage,
+                });
+            }
+        },
+
+        async googleCallback(
+            request: FastifyRequest<{ Querystring: { code: string; state?: string } }>,
+            reply: FastifyReply,
+        ) {
+            try {
+                const { code } = request.query;
+
+                if (!code) {
+                    return reply.status(400).send({
+                        success: false,
+                        message: "Authorization code is required",
+                    });
+                }
+
+                const payload = await getGoogleUser(code);
+
+                const user = await authService.handleGoogleCallback(payload);
+
+                const accessToken = await authService.generateAccessToken(user, fastify);
+                const refreshToken = await authService.generateRefreshToken(user.id);
+
+                return reply.status(200).send({
+                    success: true,
+                    data: { 
+                        user: { id: user.id, email: user.email, fullName: user.fullName }, 
+                        accessToken, 
+                        refreshToken 
+                    },
+                    message: "Google login successful",
+                });
+            } catch (error) {
+                const errorMessage =
+                    error instanceof Error ? error.message : "Failed to authenticate with Google";
+                return reply.status(401).send({
                     success: false,
                     message: errorMessage,
                 });
