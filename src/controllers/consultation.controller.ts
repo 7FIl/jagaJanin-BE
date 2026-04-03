@@ -93,7 +93,8 @@ export class ConsultationController {
         const endHour = parseInt(endHourStr || "0");
         const endMinute = parseInt(endMinuteStr || "0");
 
-        const consultationDate = new Date(date);
+        const [day, month, year] = date.split("-");
+        const consultationDate = new Date(parseInt(year!), parseInt(month!) - 1, parseInt(day!));
         consultationDate.setHours(0, 0, 0, 0);
 
         const startDateTime = new Date(consultationDate);

@@ -317,7 +317,7 @@ export const bookConsultationSchema = {
         required: ["doctorId", "date", "startTime", "endTime"],
         properties: {
             doctorId: { type: "string", description: "Doctor unique identifier" },
-            date: { type: "string", format: "date", description: "Consultation date (YYYY-MM-DD)" },
+            date: { type: "string", pattern: "^\\d{2}-\\d{2}-\\d{4}$", description: "Consultation date (DD-MM-YYYY)" },
             startTime: { type: "string", pattern: "^([0-1][0-9]|2[0-3])\\.[0-5][0-9]$", description: "Consultation start time in HH.mm format (e.g., 18.00)" },
             endTime: { type: "string", pattern: "^([0-1][0-9]|2[0-3])\\.[0-5][0-9]$", description: "Consultation end time in HH.mm format (e.g., 19.00)" }
         },

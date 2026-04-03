@@ -83,12 +83,11 @@ const getFoodDetailsByName = async (foodName: string) => {
         throw new AppError(`Food details not found for ${foodName}`, 404);
     }
 
-    const { data } = supabase.storage.from("food").getPublicUrl(foodData.foodPicture);
+    const { data } = await supabase.storage.from("avatars").getPublicUrl(foodData.foodPicture);
     return { ...foodData, foodPicture: data.publicUrl };
 };
 
 const calculateDayRange = (dateString: string) => {
-    // Parse dd-mm-yyyy format
     const [day, month, year] = dateString.split('-');
     const date = new Date(`${year}-${month}-${day}`);
     date.setHours(0, 0, 0, 0);

@@ -356,7 +356,7 @@ export const getDailyProgressTrackingSchema = {
 export const getWeeklyProgressTrackingSchema = {
 	tags: ["Dashboard"],
 	summary: "Get weekly progress",
-	description: "Get weekly nutrition and health progress tracking with trends",
+	description: "Get weekly nutrition and health progress tracking with daily breakdown",
 	response: {
 		200: {
 			description: "Weekly progress retrieved successfully",
@@ -365,33 +365,23 @@ export const getWeeklyProgressTrackingSchema = {
 				success: { type: "boolean", description: "Operation success status" },
 				data: {
 					type: "object",
-					description: "Weekly progress metrics",
+					description: "Weekly progress metrics with daily breakdown",
 					properties: {
-						week: { type: "string", description: "Week identifier (e.g., week of 2024-01-08)" },
-						averageCalories: { type: "number", description: "Average daily calories for the week" },
-						totalCalories: { type: "number", description: "Total calories consumed in the week" },
-						weeklyTrend: {
+						week: {
 							type: "array",
 							description: "Daily breakdown for the week",
 							items: {
 								type: "object",
 								properties: {
-									date: { type: "string", format: "date" },
-									calories: { type: "number" },
-									mealCount: { type: "integer" }
+									day: { type: "string", description: "Day name (e.g., Monday)" },
+									date: { type: "string", description: "Date in DD-MM-YYYY format" },
+									calories: { type: "number", description: "Total calories consumed on that day" },
+									foods: { type: "array", description: "List of food items consumed", items: { type: "string" } }
 								}
 							}
 						},
-						averageMacros: {
-							type: "object",
-							description: "Average macronutrient composition",
-							properties: {
-								protein: { type: "number" },
-								carbs: { type: "number" },
-								fat: { type: "number" }
-							}
-						},
-						compliancePercentage: { type: "number", description: "Overall weekly compliance percentage" }
+						totalCalories: { type: "number", description: "Total calories consumed in the week" },
+						dailyCalorieGoal: { type: "number", description: "Daily calorie goal from pregnancy profile" }
 					}
 				},
 				message: { type: "string", description: "Success message" }
