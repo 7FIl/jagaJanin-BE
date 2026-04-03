@@ -11,9 +11,11 @@ import "dotenv/config";
 import { profileRoutes } from "./routes/profile.routes.js";
 import { dashboardRoutes } from "./routes/dashboard.route.js";
 import { kiaRoutes } from "./routes/kia.routes.js";
-import { consultation } from "./db/schema.js";
 import { consultationRoutes } from "./routes/consultation.routes.js";
 import { paymentRoutes } from "./routes/payment.routes.js";
+import fastifySwagger from "@fastify/swagger";
+import scalar from "@scalar/fastify-api-reference"
+import { apiStatusSchema, healthCheckSchema } from "./schema/system.schema.js";
 
 const app = fastify();
 
@@ -43,11 +45,57 @@ app.register(multipart,{
 
 app.register(authPlugin);
 
-app.get("/v1/", (request, reply) => {
+app.register(fastifySwagger, {
+    openapi: {
+        info: {
+            title: "Pregnancy Nutrition API",
+            description: "API documentation for the Pregnancy Nutrition application",
+            version: "1.0.0",
+        },
+        components: {
+            securitySchemes: {
+                bearerAuth: {
+                    type: "http",
+                    scheme: "bearer",
+                    bearerFormat: "JWT",
+                },
+            },
+        },
+        security: [
+            {
+                bearerAuth: [],
+            },
+        ],
+        servers: [
+            {
+                url: "http://localhost:{port}/api/v1",
+                variables: {
+                    port: {
+                        default: "3000",
+                    },
+                },
+            },
+        ],
+    },
+});
+
+
+app.get("/openapi.json", async () => {
+  return app.swagger();
+});
+
+app.register(scalar, {
+  routePrefix: "/api/v1/docs",
+  configuration: {
+    url: "/openapi.json",
+  },
+})
+
+app.get("/v1/", {schema: apiStatusSchema}, async (request, reply) => {
   return { success: "true" };
 });
 
-app.get("/health", async (request, reply) => {
+app.get("/health", { schema: healthCheckSchema }, async (request, reply) => {
     if (await checkDatabaseConnection()) {
         return { status: 'healthy', database: 'connected' };
     }

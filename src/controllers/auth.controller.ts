@@ -187,9 +187,7 @@ export function buildAuthController(fastify: FastifyInstance) {
                 }
 
                 const payload = await getGoogleUser(code);
-
                 const user = await authService.handleGoogleCallback(payload);
-
                 const accessToken = await authService.generateAccessToken(user, fastify);
                 const refreshToken = await authService.generateRefreshToken(user.id);
 

@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
 import { consultationController } from "../controllers/consultation.controller.js";
-import { getDoctorRecommendationsSchema, getDoctorProfileSchema, getConsultationHistorySchema, getConsultationDataSchema, bookConsultationSchema, giveRatingSchema, getPaymentConfirmationSchema, } from "../schema/consultation.schema.js";
+import { getDoctorRecommendationsSchema, getDoctorProfileSchema, getConsultationHistorySchema, getConsultationDataSchema, bookConsultationSchema, giveRatingSchema, getPaymentConfirmationSchema, callDoctorSchema } from "../schema/consultation.schema.js";
 
 export async function consultationRoutes(fastify: FastifyInstance) {
     fastify.get<{ Querystring: { page?: string; limit?: string } }>
@@ -15,7 +15,7 @@ export async function consultationRoutes(fastify: FastifyInstance) {
     ("/book",{ schema: bookConsultationSchema,onRequest: [fastify.authenticate]},consultationController.bookConsultation);
     fastify.post<{ Body: { consultationId: string; ratingValue: number } }>
     ("/rating",{ schema: giveRatingSchema,onRequest: [fastify.authenticate]},consultationController.giveRating);
-    fastify.get("/call/doctor",{ onRequest: [fastify.authenticate] },consultationController.callDoctor);
+    fastify.get("/call/doctor",{ schema: callDoctorSchema, onRequest: [fastify.authenticate] },consultationController.callDoctor);
     fastify.get<{ Params: { consultationId: string } }>
     ("/payment-confirmation/:consultationId",{ schema: getPaymentConfirmationSchema,onRequest: [fastify.authenticate] },consultationController.getPaymentConfirmation);
 }

@@ -1,80 +1,469 @@
 export const getDoctorRecommendationsSchema = {
+    tags: ["Consultation"],
+    summary: "Get recommended doctors",
+    description: "Get list of recommended doctors based on user preferences and ratings, with pagination support",
     querystring: {
         type: "object",
         properties: {
-            page: { type: "string", pattern: "^[0-9]+$" },
-            limit: { type: "string", pattern: "^[0-9]+$" }
+            page: { type: "string", pattern: "^[0-9]+$", description: "Page number (default: 1)" },
+            limit: { type: "string", pattern: "^[0-9]+$", description: "Items per page (default: 5)" }
         },
         additionalProperties: false
+    },
+    response: {
+        200: {
+            description: "Recommended doctors list retrieved successfully",
+            type: "object",
+            properties: {
+                success: { type: "boolean", description: "Operation success status" },
+                data: {
+                    type: "array",
+                    description: "List of recommended doctors",
+                    items: {
+                        type: "object",
+                        properties: {
+                            id: { type: "string", description: "Doctor unique identifier" },
+                            name: { type: "string", description: "Doctor full name" },
+                            specialty: { type: "string", description: "Medical specialty" },
+                            experience: { type: "string", description: "Years of experience" },
+                            rating: { type: "number", minimum: 0, maximum: 5, description: "Average rating (0-5 stars)" },
+                            consultationFee: { type: "number", description: "Fee per consultation in IDR" },
+                            avatar: { type: "string", format: "uri", description: "Doctor profile image URL" },
+                            availabilityStatus: { type: "string", enum: ["AVAILABLE", "BUSY", "OFFLINE"], description: "Current availability status" }
+                        }
+                    }
+                },
+                message: { type: "string", description: "Success message" }
+            }
+        },
+        400: {
+            description: "Bad request or invalid pagination parameters",
+            type: "object",
+            properties: {
+                success: { type: "boolean" },
+                message: { type: "string" }
+            }
+        }
     }
 };
 
 export const getDoctorProfileSchema = {
+    tags: ["Consultation"],
+    summary: "Get doctor profile",
+    description: "Get detailed profile of a specific doctor including credentials and availability",
     params: {
         type: "object",
         required: ["doctorUserId"],
         properties: {
-            doctorUserId: { type: "string" }
+            doctorUserId: { type: "string", description: "Doctor user ID" }
         },
         additionalProperties: false
+    },
+    response: {
+        200: {
+            description: "Doctor profile details retrieved successfully",
+            type: "object",
+            properties: {
+                success: { type: "boolean", description: "Operation success status" },
+                data: {
+                    type: "object",
+                    description: "Doctor profile information",
+                    properties: {
+                        id: { type: "string", description: "Doctor unique identifier" },
+                        name: { type: "string", description: "Doctor full name" },
+                        specialty: { type: "string", description: "Medical specialty" },
+                        licenseNumber: { type: "string", description: "Professional license number" },
+                        experience: { type: "string", description: "Years of experience" },
+                        rating: { type: "number", minimum: 0, maximum: 5, description: "Average rating from consultations" },
+                        consultationCount: { type: "integer", description: "Total number of consultations" },
+                        consultationFee: { type: "number", description: "Fee per consultation in IDR" },
+                        bio: { type: "string", description: "Professional bio/about section" },
+                        avatar: { type: "string", format: "uri", description: "Profile picture URL" },
+                        availableHours: {
+                            type: "object",
+                            description: "Weekly availability schedule",
+                            properties: {
+                                Monday: { type: "array", items: { type: "string" } },
+                                Tuesday: { type: "array", items: { type: "string" } }
+                            }
+                        }
+                    }
+                },
+                message: { type: "string", description: "Success message" }
+            }
+        },
+        404: {
+            description: "Doctor not found",
+            type: "object",
+            properties: {
+                success: { type: "boolean" },
+                message: { type: "string" }
+            }
+        },
+        400: {
+            description: "Bad request",
+            type: "object",
+            properties: {
+                success: { type: "boolean" },
+                message: { type: "string" }
+            }
+        }
     }
 };
 
 export const getConsultationHistorySchema = {
+    tags: ["Consultation"],
+    summary: "Get consultation history",
+    description: "Get user's past consultations with pagination support",
     querystring: {
         type: "object",
         properties: {
-            page: { type: "string", pattern: "^[0-9]+$" },
-            limit: { type: "string", pattern: "^[0-9]+$" }
+            page: { type: "string", pattern: "^[0-9]+$", description: "Page number (default: 1)" },
+            limit: { type: "string", pattern: "^[0-9]+$", description: "Items per page (default: 5)" }
         },
         additionalProperties: false
+    },
+    response: {
+        200: {
+            description: "Consultation history retrieved successfully",
+            type: "object",
+            properties: {
+                success: { type: "boolean", description: "Operation success status" },
+                data: {
+                    type: "array",
+                    description: "List of past consultations",
+                    items: {
+                        type: "object",
+                        properties: {
+                            id: { type: "string", description: "Consultation unique identifier" },
+                            doctorId: { type: "string", description: "Doctor unique identifier" },
+                            doctorName: { type: "string", description: "Doctor full name" },
+                            specialty: { type: "string", description: "Doctor specialty" },
+                            consultationDate: { type: "string", format: "date-time", description: "Consultation start time" },
+                            duration: { type: "integer", description: "Consultation duration in minutes" },
+                            status: { type: "string", enum: ["COMPLETED", "CANCELLED", "SCHEDULED", "ONGOING"], description: "Consultation status" },
+                            paymentStatus: { type: "string", enum: ["PAID", "PENDING", "FAILED"], description: "Payment status" },
+                            amount: { type: "number", description: "Consultation fee in IDR" },
+                            rating: { type: "number", minimum: 0, maximum: 5, description: "User's rating if completed" },
+                            notes: { type: "string", description: "Consultation notes/summary" }
+                        }
+                    }
+                },
+                message: { type: "string", description: "Success message" }
+            }
+        },
+        401: {
+            description: "Unauthorized - authentication required",
+            type: "object",
+            properties: {
+                success: { type: "boolean" },
+                message: { type: "string" }
+            }
+        },
+        400: {
+            description: "Bad request or invalid pagination parameters",
+            type: "object",
+            properties: {
+                success: { type: "boolean" },
+                message: { type: "string" }
+            }
+        }
     }
 };
 
 export const getConsultationDataSchema = {
-    querystring: {
-        type: "object",
-        properties: {
-            page: { type: "string", pattern: "^[0-9]+$" },
-            limit: { type: "string", pattern: "^[0-9]+$" }
+    tags: ["Consultation"],
+    summary: "Get consultation data",
+    description: "Get consultation data and summary for pregnancy tracking",
+    response: {
+        200: {
+            description: "Consultation data retrieved successfully",
+            type: "object",
+            properties: {
+                success: { type: "boolean", description: "Operation success status" },
+                data: {
+                    type: "object",
+                    description: "Aggregated consultation data",
+                    properties: {
+                        totalConsultations: { type: "integer", description: "Total number of consultations" },
+                        completedConsultations: { type: "integer", description: "Completed consultations" },
+                        upcomingConsultations: { type: "integer", description: "Scheduled upcoming consultations" },
+                        totalAmountSpent: { type: "number", description: "Total amount spent on consultations in IDR" },
+                        averageRating: { type: "number", minimum: 0, maximum: 5, description: "Average rating given to doctors" },
+                        frequentDoctors: {
+                            type: "array",
+                            description: "Top doctors consulted",
+                            items: {
+                                type: "object",
+                                properties: {
+                                    doctorId: { type: "string" },
+                                    doctorName: { type: "string" },
+                                    consultationCount: { type: "integer" }
+                                }
+                            }
+                        },
+                        lastConsultation: {
+                            type: "object",
+                            description: "Most recent consultation details",
+                            properties: {
+                                id: { type: "string" },
+                                doctorName: { type: "string" },
+                                date: { type: "string", format: "date-time" },
+                                status: { type: "string" }
+                            }
+                        }
+                    }
+                },
+                message: { type: "string", description: "Success message" }
+            }
         },
-        additionalProperties: false
+        401: {
+            description: "Unauthorized - authentication required",
+            type: "object",
+            properties: {
+                success: { type: "boolean" },
+                message: { type: "string" }
+            }
+        },
+        400: {
+            description: "Bad request or user data missing",
+            type: "object",
+            properties: {
+                success: { type: "boolean" },
+                message: { type: "string" }
+            }
+        }
     }
 };
 
 export const bookConsultationSchema = {
+    tags: ["Consultation"],
+    summary: "Book a consultation",
+    description: "Schedule a new consultation with a doctor at a specific time",
     body: {
         type: "object",
         required: ["doctorId", "startTime", "endTime"],
         properties: {
-            doctorId: { type: "string" },
-            startTime: { type: "string", format: "date-time" },
-            endTime: { type: "string", format: "date-time" }
+            doctorId: { type: "string", description: "Doctor unique identifier" },
+            startTime: { type: "string", format: "date-time", description: "Consultation start time (ISO 8601 format)" },
+            endTime: { type: "string", format: "date-time", description: "Consultation end time (ISO 8601 format)" }
         },
         additionalProperties: false
+    },
+    response: {
+        201: {
+            description: "Consultation booked successfully",
+            type: "object",
+            properties: {
+                success: { type: "boolean", description: "Operation success status" },
+                data: {
+                    type: "object",
+                    description: "Booking confirmation details",
+                    properties: {
+                        consultationId: { type: "string", description: "New consultation unique identifier" },
+                        doctorId: { type: "string", description: "Doctor ID" },
+                        doctorName: { type: "string", description: "Doctor full name" },
+                        specialty: { type: "string", description: "Doctor specialty" },
+                        startTime: { type: "string", format: "date-time", description: "Confirmed start time" },
+                        endTime: { type: "string", format: "date-time", description: "Confirmed end time" },
+                        status: { type: "string", description: "Booking status (CONFIRMED/PENDING)" },
+                        consultationFee: { type: "number", description: "Fee to be paid in IDR" },
+                        paymentStatus: { type: "string", description: "Payment status (PENDING/PAID)" }
+                    }
+                },
+                message: { type: "string", description: "Success message" }
+            }
+        },
+        401: {
+            description: "Unauthorized - authentication required",
+            type: "object",
+            properties: {
+                success: { type: "boolean" },
+                message: { type: "string" }
+            }
+        },
+        400: {
+            description: "Bad request - invalid time, doctor unavailable, or other validation error",
+            type: "object",
+            properties: {
+                success: { type: "boolean" },
+                message: { type: "string", description: "Error message explaining the issue" }
+            }
+        }
     }
 };
 
 export const giveRatingSchema = {
+    tags: ["Consultation"],
+    summary: "Rate a consultation",
+    description: "Rate a completed consultation with star rating and optional comment",
     body: {
         type: "object",
         required: ["consultationId", "ratingValue"],
         properties: {
-            consultationId: { type: "string" },
-            ratingValue: { type: "number", minimum: 1, maximum: 5 }
+            consultationId: { type: "string", description: "Consultation unique identifier" },
+            ratingValue: { type: "number", minimum: 1, maximum: 5, description: "Star rating from 1 to 5" },
+            comment: { type: "string", description: "Optional written feedback/review" }
         },
         additionalProperties: false
+    },
+    response: {
+        200: {
+            description: "Rating submitted successfully",
+            type: "object",
+            properties: {
+                success: { type: "boolean", description: "Operation success status" },
+                data: {
+                    type: "object",
+                    description: "Rating submission confirmation",
+                    properties: {
+                        consultationId: { type: "string" },
+                        ratingValue: { type: "number" },
+                        submittedAt: { type: "string", format: "date-time", description: "When the rating was submitted" },
+                        doctorNewAverageRating: { type: "number", description: "Doctor's updated average rating" }
+                    }
+                },
+                message: { type: "string", description: "Success message" }
+            }
+        },
+        401: {
+            description: "Unauthorized - authentication required",
+            type: "object",
+            properties: {
+                success: { type: "boolean" },
+                message: { type: "string" }
+            }
+        },
+        400: {
+            description: "Bad request - invalid rating value or consultation not found",
+            type: "object",
+            properties: {
+                success: { type: "boolean" },
+                message: { type: "string" }
+            }
+        },
+        404: {
+            description: "Consultation not found or not authorized for this consultation",
+            type: "object",
+            properties: {
+                success: { type: "boolean" },
+                message: { type: "string" }
+            }
+        }
     }
 };
 
-
 export const getPaymentConfirmationSchema = {
+    tags: ["Consultation"],
+    summary: "Get payment confirmation",
+    description: "Get payment confirmation and invoice details for a consultation",
     params: {
         type: "object",
         required: ["consultationId"],
         properties: {
-            consultationId: { type: "string" }
+            consultationId: { type: "string", description: "Consultation unique identifier" }
         },
         additionalProperties: false
+    },
+    response: {
+        200: {
+            description: "Payment confirmation details retrieved successfully",
+            type: "object",
+            properties: {
+                success: { type: "boolean", description: "Operation success status" },
+                data: {
+                    type: "object",
+                    description: "Payment and invoice information",
+                    properties: {
+                        consultationId: { type: "string", description: "Consultation ID" },
+                        doctorName: { type: "string", description: "Doctor name" },
+                        consultationDate: { type: "string", format: "date-time", description: "Consultation date/time" },
+                        amount: { type: "number", description: "Consultation fee in IDR" },
+                        status: { type: "string", enum: ["PAID", "PENDING", "FAILED"], description: "Payment status" },
+                        paidAt: { type: "string", format: "date-time", description: "Payment timestamp (null if not paid)" },
+                        invoiceNumber: { type: "string", description: "Invoice/receipt number" },
+                        paymentMethod: { type: "string", description: "Payment method used" },
+                        transactionId: { type: "string", description: "Payment gateway transaction ID" }
+                    }
+                },
+                message: { type: "string", description: "Success message" }
+            }
+        },
+        401: {
+            description: "Unauthorized - authentication required",
+            type: "object",
+            properties: {
+                success: { type: "boolean" },
+                message: { type: "string" }
+            }
+        },
+        404: {
+            description: "Consultation not found or payment not found",
+            type: "object",
+            properties: {
+                success: { type: "boolean" },
+                message: { type: "string" }
+            }
+        },
+        400: {
+            description: "Bad request - invalid consultation ID",
+            type: "object",
+            properties: {
+                success: { type: "boolean" },
+                message: { type: "string" }
+            }
+        }
+    }
+};
+
+export const callDoctorSchema = {
+    tags: ["Consultation"],
+    summary: "Call doctor for consultation",
+    description: "Initiate a real-time video/voice consultation with doctor (must have active scheduled consultation)",
+    response: {
+        200: {
+            description: "Consultation call initiated successfully",
+            type: "object",
+            properties: {
+                success: { type: "boolean", description: "Operation success status" },
+                data: {
+                    type: "object",
+                    description: "Call session details",
+                    properties: {
+                        consultationId: { type: "string", description: "Active consultation ID" },
+                        callLink: { type: "string", format: "uri", description: "Video call room link/URL" },
+                        callToken: { type: "string", description: "Authentication token for the call session" },
+                        startTime: { type: "string", format: "date-time", description: "When the call started" },
+                        doctorName: { type: "string", description: "Doctor's name on the call" },
+                        maxDuration: { type: "integer", description: "Maximum call duration in minutes" }
+                    }
+                },
+                message: { type: "string", description: "Success message" }
+            }
+        },
+        401: {
+            description: "Unauthorized - authentication required",
+            type: "object",
+            properties: {
+                success: { type: "boolean" },
+                message: { type: "string" }
+            }
+        },
+        400: {
+            description: "Bad request - no active consultation or consultation not yet started",
+            type: "object",
+            properties: {
+                success: { type: "boolean" },
+                message: { type: "string", description: "Error message explaining why call cannot be initiated" }
+            }
+        },
+        404: {
+            description: "Active consultation not found",
+            type: "object",
+            properties: {
+                success: { type: "boolean" },
+                message: { type: "string" }
+            }
+        }
     }
 };

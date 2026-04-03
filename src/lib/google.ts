@@ -9,7 +9,7 @@ if (!process.env.GOOGLE_CLIENT_SECRET) {
     throw new Error("GOOGLE_CLIENT_SECRET environment variable is required");
 }
 
-const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || "http://localhost:3000/api/v1/auth/google/fallback";
+const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || "http://localhost:3000/api/v1/auth/google/callback";
 
 export const Client = new OAuth2Client(
     process.env.GOOGLE_CLIENT_ID,
@@ -18,7 +18,6 @@ export const Client = new OAuth2Client(
 );
 
 export function getGoogleAuthUrl(): string {
-
     return Client.generateAuthUrl({
         access_type: "offline",
         scope: ["profile", "email"],
