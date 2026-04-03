@@ -21,23 +21,14 @@ export class AppError extends Error {
   }
 }
 
-/**
- * Type guard untuk cek apakah error adalah FastifyError
- */
 const isFastifyError = (error: unknown): error is FastifyError => {
   return error instanceof Error && "statusCode" in error;
 };
 
-/**
- * Type guard untuk cek apakah error adalah AppError
- */
 const isAppError = (error: unknown): error is AppError => {
   return error instanceof AppError;
 };
 
-/**
- * Helper function untuk mendapatkan error message
- */
 const getErrorMessage = (error: unknown): string => {
   if (error instanceof Error) {
     return error.message;
@@ -48,9 +39,7 @@ const getErrorMessage = (error: unknown): string => {
   return "Unknown error occurred";
 };
 
-/**
- * Helper function untuk mendapatkan error name
- */
+
 const getErrorName = (error: unknown): string => {
   if (error instanceof Error) {
     return error.name;
@@ -58,10 +47,6 @@ const getErrorName = (error: unknown): string => {
   return "UnknownError";
 };
 
-/**
- * Global error handler untuk Fastify
- * Menangani semua error yang tidak tertangkap
- */
 export const setupErrorHandler = (app: FastifyInstance) => {
   app.setErrorHandler(async (error: FastifyError, request: FastifyRequest, reply: FastifyReply) => {
     const timestamp = new Date().toISOString();
@@ -85,12 +70,10 @@ export const setupErrorHandler = (app: FastifyInstance) => {
     let message = "Internal Server Error";
     let responseErrorName = errorName;
 
-    // Handle specific error types
     if (isAppError(error)) {
       statusCode = error.statusCode;
       message = error.message;
     } else if (isFastifyError(error) && error.statusCode && typeof error.statusCode === "number") {
-      // Fastify validation errors, JWT errors, etc.
       statusCode = error.statusCode;
       message = error.message;
     } else if (errorName === "ValidationError") {
@@ -130,14 +113,11 @@ export const setupErrorHandler = (app: FastifyInstance) => {
       method,
     };
 
-    // Send error response
     return reply.status(statusCode).send(errorResponse);
   });
 };
 
-/**
- * Hook untuk menangani request yang tidak ditemukan (404)
- */
+
 export const setupNotFoundHandler = (app: FastifyInstance) => {
   app.setNotFoundHandler((request, reply) => {
     const timestamp = new Date().toISOString();
@@ -156,16 +136,14 @@ export const setupNotFoundHandler = (app: FastifyInstance) => {
   });
 };
 
-/**
- * Global error untuk unhandled promise rejection
- */
+
 export const setupUncaughtErrorHandlers = () => {
   process.on("uncaughtException", (error) => {
-    console.error("❌ Uncaught Exception:", error);
+    console.error(" Uncaught Exception:", error);
     process.exit(1);
   });
 
   process.on("unhandledRejection", (reason, promise) => {
-    console.error("❌ Unhandled Rejection at:", promise, "reason:", reason);
+    console.error(" Unhandled Rejection at:", promise, "reason:", reason);
   });
 };

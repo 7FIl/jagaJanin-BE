@@ -1,5 +1,6 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { dashboardService } from "../services/dashboard.service.js";
+import { error } from "node:console";
 
 export class DashboardController {
     async getDashboardData(
@@ -15,10 +16,12 @@ export class DashboardController {
                 message: "Dashboard data retrieved successfully"
             });
         } catch (error) {
-            if (error instanceof Error) {
-                return reply.code(400).send({ error: error.message });
-            }
-            return reply.code(500).send({ error: "Internal server error" });
+            const errorMessage =
+                error instanceof Error ? error.message : "An error occurred";
+            return reply.status(400).send({
+                success: false,
+                message: errorMessage,
+            });
         }
     }
     
@@ -34,12 +37,15 @@ export class DashboardController {
                 data: mealRecommendations,
                 message: "Meal recommendations retrieved successfully"
             });
-        } catch (error) {
-            if (error instanceof Error) {
-                return reply.code(400).send({ error: error.message });
+            } catch (error) {
+                const errorMessage =
+                    error instanceof Error ? error.message : "An error occurred";
+                return reply.status(400).send({
+                    success: false,
+                    message: errorMessage,
+                });
             }
-            return reply.code(500).send({ error: "Internal server error" });
-        }
+        
     }
 
     async getDailyProgressTracking(
@@ -55,10 +61,12 @@ export class DashboardController {
                 message: "Daily progress retrieved successfully"
             });
         } catch (error) {
-            if (error instanceof Error) {
-                return reply.code(400).send({ error: error.message });
-            }
-            return reply.code(500).send({ error: "Internal server error" });
+            const errorMessage =
+                error instanceof Error ? error.message : "An error occurred";
+            return reply.status(400).send({
+                success: false,
+                message: errorMessage,
+            });
         }
     }
 
@@ -75,10 +83,12 @@ export class DashboardController {
                 message: "Weekly progress retrieved successfully"
             });
         } catch (error) {
-            if (error instanceof Error) {
-                return reply.code(400).send({ error: error.message });
-            }
-            return reply.code(500).send({ error: "Internal server error" });
+            const errorMessage =
+                error instanceof Error ? error.message : "An error occurred";
+            return reply.status(400).send({
+                success: false,
+                message: errorMessage,
+            });
         }
     }
 
@@ -96,10 +106,12 @@ export class DashboardController {
                 message: "Meal logs retrieved successfully"
             });
         } catch (error) {
-            if (error instanceof Error) {
-                return reply.code(400).send({ error: error.message });
-            }
-            return reply.code(500).send({ error: "Internal server error" });
+            const errorMessage =
+                error instanceof Error ? error.message : "An error occurred";
+            return reply.status(400).send({
+                success: false,
+                message: errorMessage,
+            });
         }
     }
 
@@ -117,10 +129,12 @@ export class DashboardController {
                 message: result.message
             });
         } catch (error) {
-            if (error instanceof Error) {
-                return reply.code(400).send({ error: error.message });
-            }
-            return reply.code(500).send({ error: "Internal server error" });
+            const errorMessage =
+                error instanceof Error ? error.message : "An error occurred";
+            return reply.status(400).send({
+                success: false,
+                message: errorMessage,
+            });
         }
     }
 
@@ -134,7 +148,7 @@ export class DashboardController {
             const { foodId, quantity } = request.body as { foodId?: number; quantity?: number };
             
             if (!foodId && !quantity) {
-                return reply.code(400).send({ error: "At least one of foodId or quantity must be provided" });
+                return reply.code(400).send({ success: false, message: "At least one of foodId or quantity must be provided" });
             }
             
             const result = await dashboardService.editMealLog(userId, mealLogId, foodId, quantity);
@@ -144,10 +158,12 @@ export class DashboardController {
                 message: result.message
             });
         } catch (error) {
-            if (error instanceof Error) {
-                return reply.code(400).send({ error: error.message });
-            }
-            return reply.code(500).send({ error: "Internal server error" });
+            const errorMessage =
+                error instanceof Error ? error.message : "An error occurred";
+            return reply.status(400).send({
+                success: false,
+                message: errorMessage,
+            });
         }
     }
 
@@ -165,10 +181,12 @@ export class DashboardController {
                 message: result.message
             });
         } catch (error) {
-            if (error instanceof Error) {
-                return reply.code(400).send({ error: error.message });
-            }
-            return reply.code(500).send({ error: "Internal server error" });
+            const errorMessage =
+                error instanceof Error ? error.message : "An error occurred";
+            return reply.status(400).send({
+                success: false,
+                message: errorMessage,
+            });
         }
     }
 

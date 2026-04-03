@@ -41,7 +41,7 @@ export class PaymentService {
             .where(eq(users.id, userId))
             .limit(1);
 
-        const platformFee = Math.round(verifyConsultation.fee * 0.1);
+        const platformFee = Math.round(verifyConsultation.fee * 0.05);
         const totalAmount = verifyConsultation.fee + platformFee;
 
         try {
@@ -89,7 +89,6 @@ export class PaymentService {
         }
     }
 
-    // Check payment status from Xendit
     async checkPaymentStatus(invoiceId: string): Promise<string> {
         try {
             const [invoice] = await Invoice.getInvoices({ lastInvoice: invoiceId });
@@ -99,7 +98,6 @@ export class PaymentService {
         }
     }
 
-    // Handle Xendit webhook callback for payment confirmation
     async handlePaymentWebhook(invoiceId: string, status: string): Promise<boolean> {
         try {
             const [paymentRecord] = await db
@@ -136,7 +134,6 @@ export class PaymentService {
         }
     }
 
-    // Get payment history for a user
     async getPaymentHistory(userId: string): Promise<Array<any>> {
         const payments = await db
             .select({

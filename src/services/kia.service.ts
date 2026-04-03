@@ -70,7 +70,7 @@ export interface ChecklistInput {
     counseling: boolean;
     tetanusImmunization: boolean;
     healthScreening: boolean;
-    ironSuplement: boolean;
+    ironSupplement: boolean;
     ppia: boolean;
     isCompleted: boolean;
 }
@@ -352,11 +352,11 @@ export class kiaService {
         const kiaData = await getKiaDataByUserId(userId);
 
         const updateValues: any = {};
-        if (input.fetalHeartbeat !== undefined) updateValues.fetal_heatbeat = input.fetalHeartbeat;
+        if (input.fetalHeartbeat !== undefined) updateValues.fetal_heartbeat = input.fetalHeartbeat;
         if (input.counseling !== undefined) updateValues.counseling = input.counseling;
         if (input.tetanusImmunization !== undefined) updateValues.tetanus_immunization = input.tetanusImmunization;
         if (input.healthScreening !== undefined) updateValues.health_screening = input.healthScreening;
-        if (input.ironSuplement !== undefined) updateValues.iron_suplement = input.ironSuplement;
+        if (input.ironSupplement !== undefined) updateValues.iron_supplement = input.ironSupplement;
         if (input.ppia !== undefined) updateValues.ppia = input.ppia;
         if (input.isCompleted !== undefined) updateValues.is_completed = input.isCompleted;
 
@@ -375,11 +375,11 @@ export class kiaService {
         }
 
         const checklistItems = [];
-        if (updatedChecklist.fetal_heatbeat) checklistItems.push("Fetal Heartbeat");
+        if (updatedChecklist.fetal_heartbeat) checklistItems.push("Fetal Heartbeat");
         if (updatedChecklist.counseling) checklistItems.push("Counseling");
         if (updatedChecklist.tetanus_immunization) checklistItems.push("Tetanus Immunization");
         if (updatedChecklist.health_screening) checklistItems.push("Health Screening");
-        if (updatedChecklist.iron_suplement) checklistItems.push("Iron Supplementation");
+        if (updatedChecklist.iron_supplement) checklistItems.push("Iron Supplement");
         if (updatedChecklist.ppia) checklistItems.push("PPIA");
 
         if (checklistItems.length === 6) {
@@ -414,11 +414,11 @@ export class kiaService {
 
             return {
                 checklist: [
-                    { name: "Fetal Heartbeat", completed: newChecklist!.fetal_heatbeat },
+                    { name: "Fetal Heartbeat", completed: newChecklist!.fetal_heartbeat },
                     { name: "Counseling", completed: newChecklist!.counseling },
                     { name: "Tetanus Immunization", completed: newChecklist!.tetanus_immunization },
                     { name: "Health Screening", completed: newChecklist!.health_screening },
-                    { name: "Iron Supplementation", completed: newChecklist!.iron_suplement },
+                    { name: "Iron Supplement", completed: newChecklist!.iron_supplement },
                     { name: "PPIA", completed: newChecklist!.ppia }
                 ].map(item => item.name),
                 isCompleted: false,
@@ -426,11 +426,11 @@ export class kiaService {
         }
 
         const checklistItems = [];
-        if (checklistData.fetal_heatbeat) checklistItems.push("Fetal Heartbeat");
+        if (checklistData.fetal_heartbeat) checklistItems.push("Fetal Heartbeat");
         if (checklistData.counseling) checklistItems.push("Counseling");
         if (checklistData.tetanus_immunization) checklistItems.push("Tetanus Immunization");
         if (checklistData.health_screening) checklistItems.push("Health Screening");
-        if (checklistData.iron_suplement) checklistItems.push("Iron Supplementation");
+        if (checklistData.iron_supplement) checklistItems.push("Iron Supplementation");
         if (checklistData.ppia) checklistItems.push("PPIA");
 
         return {
@@ -573,11 +573,11 @@ export class kiaService {
             blood_type: check.blood_type,
             blood_sugar: check.blood_sugar,
             urine_protein: check.urine_protein,
-            fetal_heartbeat: checklistData?.fetal_heatbeat || false,
+            fetal_heartbeat: checklistData?.fetal_heartbeat || false,
             counseling: checklistData?.counseling || false,
             tetanus_immunization: checklistData?.tetanus_immunization || false,
             health_screening: checklistData?.health_screening || false,
-            iron_supplementation: checklistData?.iron_suplement || false,
+            iron_supplement: checklistData?.iron_supplement || false,
             ppia: checklistData?.ppia || false,
             checklist_completed: checklistData?.is_completed || false,
         }));
@@ -656,11 +656,11 @@ export class kiaService {
         doc.moveDown(0.3);
         if (checklistData) {
             const checklistItems = [];
-            if (checklistData.fetal_heatbeat) checklistItems.push('✓ Fetal Heartbeat');
+            if (checklistData.fetal_heartbeat) checklistItems.push('✓ Fetal Heartbeat');
             if (checklistData.counseling) checklistItems.push('✓ Counseling');
             if (checklistData.tetanus_immunization) checklistItems.push('✓ Tetanus Immunization');
             if (checklistData.health_screening) checklistItems.push('✓ Health Screening');
-            if (checklistData.iron_suplement) checklistItems.push('✓ Iron Supplementation');
+            if (checklistData.iron_supplement) checklistItems.push('✓ Iron Supplement');
             if (checklistData.ppia) checklistItems.push('✓ PPIA');
             
             doc.fontSize(11).font('Helvetica');

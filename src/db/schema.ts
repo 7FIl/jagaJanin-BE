@@ -1,7 +1,4 @@
-import { anonymousRole } from "drizzle-orm/neon";
 import { boolean, decimal, integer, pgTable, serial, text, time, timestamp, uuid, varchar, } from "drizzle-orm/pg-core";
-import { create } from "node:domain";
-import { start } from "node:repl";
 
 export const users = pgTable("users", {
     id: uuid("id").primaryKey().defaultRandom(),
@@ -104,11 +101,11 @@ export const checkup = pgTable("checkup", {
 export const checklist = pgTable("checklist", {
     id: uuid("id").primaryKey().defaultRandom(),
     kia_id: uuid("kia_id").notNull().references(() => kia.id),
-    fetal_heatbeat: boolean("fetal_heartbeat").notNull().default(false),
+    fetal_heartbeat: boolean("fetal_heartbeat").notNull().default(false),
     counseling: boolean("counseling").notNull().default(false),
     tetanus_immunization: boolean("tetanus_immunization").notNull().default(false),
     health_screening: boolean("health_screening").notNull().default(false),
-    iron_suplement: boolean("iron_supplementation").notNull().default(false),
+    iron_supplement: boolean("iron_supplement").notNull().default(false),
     ppia: boolean("ppia").notNull().default(false),
     is_completed: boolean("is_completed").notNull().default(false),
 });
@@ -149,7 +146,7 @@ export const consultation = pgTable("consultation", {
     start_time: timestamp("start_time").notNull(),
     end_time: timestamp("end_time").notNull(),
     is_done: boolean("is_done").notNull().default(false),
-    is_done_rating: boolean("is_done").notNull().default(false),
+    is_done_rating: boolean("is_done_rating").notNull().default(false),
     is_paid: boolean("is_paid").notNull().default(false),
     created_at: timestamp("created_at").notNull().defaultNow(),
 });

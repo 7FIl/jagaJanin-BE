@@ -1,5 +1,6 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { paymentService } from "../services/payment.service.js";
+import "dotenv/config";
 
 interface ConsultationPaymentRequest {
     consultationId: string;
@@ -10,6 +11,34 @@ interface PaymentWebhookRequest {
     status: string;
     externalId: string;
 }
+
+const XENDIT_WEBHOOK_SECRET = process.env.XENDIT_WEBHOOK_SECRET;
+
+
+export const validateXenditWebhookToken = async (
+    request: FastifyRequest,
+    reply: FastifyReply
+) => {
+    const callbackToken = request.headers["x-callback-token"];
+
+    if (!XENDIT_WEBHOOK_SECRET) {
+        throw new Error("XENDIT_WEBHOOK_SECRET environment variable is not set");
+    }
+
+    if (!callbackToken) {
+        return reply.status(401).send({
+            success: false,
+            message: "Missing X-Callback-Token header",
+        });
+    }
+
+    if (callbackToken !== XENDIT_WEBHOOK_SECRET) {
+        return reply.status(403).send({
+            success: false,
+            message: "Invalid webhook token",
+        });
+    }
+};
 
 export class PaymentController {
 

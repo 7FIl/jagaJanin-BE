@@ -1,12 +1,13 @@
 import { FastifyInstance } from "fastify";
-import { paymentController } from "../controllers/payment.controller.js";
+import { paymentController, validateXenditWebhookToken } from "../controllers/payment.controller.js";
+import { createPaymentSchema, checkPaymentStatusSchema, handlePaymentWebhookSchema, } from "../schema/payment.schema.js";
 
 export async function paymentRoutes(fastify: FastifyInstance) {
     fastify.post<{ Body: { consultationId: string } }>
-    ("/create",{ onRequest: [fastify.authenticate] },(request, reply) => paymentController.createPayment(request, reply));
+    ( "/create", { schema: createPaymentSchema, onRequest: [fastify.authenticate] }, paymentController.createPayment );
     fastify.get<{ Params: { invoiceId: string } }>
-    ("/status/:invoiceId",{ onRequest: [fastify.authenticate] },(request, reply) => paymentController.checkPaymentStatus(request, reply));
+    ( "/status/:invoiceId",{ schema: checkPaymentStatusSchema, onRequest: [fastify.authenticate] }, paymentController.checkPaymentStatus );
     fastify.post<{ Body: { id: string; status: string; externalId: string } }>
-    ("/webhook",(request, reply) => paymentController.handlePaymentWebhook(request, reply));
-    fastify.get("/history",{ onRequest: [fastify.authenticate] },(request, reply) => paymentController.getPaymentHistory(request, reply));
+    ("/webhook",{ schema: handlePaymentWebhookSchema, onRequest: [validateXenditWebhookToken] }, paymentController.handlePaymentWebhook );
+    fastify.get( "/history", { onRequest: [fastify.authenticate] }, paymentController.getPaymentHistory );
 }
