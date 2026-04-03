@@ -14,4 +14,5 @@ RUN pnpm run build
 
 EXPOSE 3009
 
-CMD [ "pnpm", "run", "start" ]
+CMD [ "sh", "-c", "pnpm run db:migrate && pnpm run db:seed && pnpm run start" ]
+
