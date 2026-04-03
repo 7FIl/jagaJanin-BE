@@ -6,6 +6,7 @@ import { checkDatabaseConnection } from "./db/index.js";
 import { authRoutes } from "./routes/auth.routes.js";
 import { formRoutes } from "./routes/form.routes.js";
 import { authPlugin } from "./plugins/auth.plugins.js";
+import { setupErrorHandler, setupNotFoundHandler, setupUncaughtErrorHandlers } from "./lib/errorHandler.js";
 import "dotenv/config";
 import { profileRoutes } from "./routes/profile.routes.js";
 import { dashboardRoutes } from "./routes/dashboard.route.js";
@@ -26,11 +27,15 @@ if (!PORT) {
   throw new Error("API_PORT environment variable is required");
 }
 
+setupErrorHandler(app);
+setupNotFoundHandler(app);
+setupUncaughtErrorHandlers();
+
 app.register(fastifyJwt, {
   secret: jwtSecret
 });
 
-await app.register(multipart,{
+app.register(multipart,{
   limits: {
     fileSize: 2 * 1024 * 1024,
   },
