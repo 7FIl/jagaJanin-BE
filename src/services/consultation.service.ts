@@ -59,9 +59,37 @@ interface consultationAfter extends consultationBookingResponse {
     isDoneRating: boolean;
 }
 
+interface paginationParams {
+    page?: number;
+    limit?: number;
+}
+
+interface paginationMetadata {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+}
+
 interface consultationHistoryResponse {
     done: consultationAfter[];
     upcoming: consultationBefore[];
+}
+
+interface paginatedConsultationHistoryResponse {
+    done: {
+        data: consultationAfter[];
+        pagination: paginationMetadata;
+    };
+    upcoming: {
+        data: consultationBefore[];
+        pagination: paginationMetadata;
+    };
+}
+
+interface paginatedDoctorRecommendationResponse {
+    data: doctorRecomendation[];
+    pagination: paginationMetadata;
 }
 
 interface paymentConfirmationResponse {
@@ -75,7 +103,7 @@ interface paymentConfirmationResponse {
     paymentMethod: string[];
 }
 
-function getDayName(dayNumber: number): string {
+export function getDayName(dayNumber: number): string {
     const dayNames: { [key: number]: string } = {
         1: "Senin",
         2: "Selasa",
@@ -87,10 +115,16 @@ function getDayName(dayNumber: number): string {
     };
     return dayNames[dayNumber] || "";
 }
+
 export class ConsultationService {
 
-    async getDoctorRecommendations(): Promise<doctorRecomendationResponse> {
-        const doctors = await db
+    async getDoctorRecommendations(params?: paginationParams): Promise<paginatedDoctorRecommendationResponse> {
+        const page = params?.page || 1;
+        const limit = params?.limit || 5;
+        const offset = (page - 1) * limit;
+
+        // Fetch all doctors (optimized for reasonable dataset sizes)
+        const allDoctors = await db
             .select({
                 name: users.full_name,
                 specialty: doctor_profile.specialization,
@@ -101,9 +135,20 @@ export class ConsultationService {
             .from(doctor_profile)
             .innerJoin(users, eq(doctor_profile.user_id, users.id));
 
-            
+        const total = allDoctors.length;
+        const totalPages = Math.ceil(total / limit);
+        
+        // Paginate in memory
+        const paginatedDoctors = allDoctors.slice(offset, offset + limit);
+
         return {
-            doctors: doctors as doctorRecomendation[],
+            data: paginatedDoctors as doctorRecomendation[],
+            pagination: {
+                page,
+                limit,
+                total,
+                totalPages,
+            }
         };
     }
 
@@ -156,7 +201,11 @@ export class ConsultationService {
     }
 
 
-    async getConsultationHistory(userId: string): Promise<consultationHistoryResponse> {
+    async getConsultationHistory(userId: string, params?: paginationParams): Promise<paginatedConsultationHistoryResponse> {
+        const page = params?.page || 1;
+        const limit = params?.limit || 5;
+        const offset = (page - 1) * limit;
+
         const consultations = await db
             .select({
                 id: consultation.id,
@@ -195,7 +244,36 @@ export class ConsultationService {
             }
         }
 
-        return { done, upcoming };
+        // Calculate pagination for done consultations
+        const doneTotal = done.length;
+        const doneTotalPages = Math.ceil(doneTotal / limit);
+        const donePaginated = done.slice(offset, offset + limit);
+
+        // Calculate pagination for upcoming consultations
+        const upcomingTotal = upcoming.length;
+        const upcomingTotalPages = Math.ceil(upcomingTotal / limit);
+        const upcomingPaginated = upcoming.slice(offset, offset + limit);
+
+        return {
+            done: {
+                data: donePaginated,
+                pagination: {
+                    page,
+                    limit,
+                    total: doneTotal,
+                    totalPages: doneTotalPages,
+                }
+            },
+            upcoming: {
+                data: upcomingPaginated,
+                pagination: {
+                    page,
+                    limit,
+                    total: upcomingTotal,
+                    totalPages: upcomingTotalPages,
+                }
+            }
+        };
     }
 
     async getConsultationData(userId: string): Promise<consultationData> {
@@ -225,11 +303,13 @@ export class ConsultationService {
                 doctorName: "",
             };
 
-        const doctorRecommendations = await this.getDoctorRecommendations();
+        const doctorRecommendationsResponse = await this.getDoctorRecommendations();
 
         return {
             consulationSchedule: consultationSchedule,
-            doctorRecomendation: doctorRecommendations,
+            doctorRecomendation: {
+                doctors: doctorRecommendationsResponse.data,
+            },
         };
     }
 

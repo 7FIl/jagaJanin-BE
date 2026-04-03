@@ -12,13 +12,21 @@ interface GiveRatingInput {
     ratingValue: number;
 }
 
+
+
 export class ConsultationController {
     async getDoctorRecommendations(
-        request: FastifyRequest,
+        request: FastifyRequest<{ Querystring: { page?: string; limit?: string } }>,
         reply: FastifyReply,
     ) {
         try {
-            const recommendations = await consultationService.getDoctorRecommendations();
+            const page = request.query.page ? parseInt(request.query.page) : 1;
+            const limit = request.query.limit ? parseInt(request.query.limit) : 5;
+            
+            const recommendations = await consultationService.getDoctorRecommendations({
+                page,
+                limit,
+            });
             return reply.status(200).send({
                 success: true,
                 data: recommendations,
@@ -57,12 +65,18 @@ export class ConsultationController {
     }
 
     async getConsultationHistory(
-        request: FastifyRequest,
+        request: FastifyRequest<{ Querystring: { page?: string; limit?: string } }>,
         reply: FastifyReply,
     ) {
         try {
             const userId = request.user.sub;
-            const history = await consultationService.getConsultationHistory(userId);
+            const page = request.query.page ? parseInt(request.query.page) : 1;
+            const limit = request.query.limit ? parseInt(request.query.limit) : 5;
+            
+            const history = await consultationService.getConsultationHistory(userId, {
+                page,
+                limit,
+            });
             return reply.status(200).send({
                 success: true,
                 data: history,

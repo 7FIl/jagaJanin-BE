@@ -5,6 +5,7 @@ import { profileService } from "./profile.service.js";
 import { calculateTrimester, mealRecomendation } from "./form.service.js";
 import { getPregnancyWeeks } from "./pregnancy.service.js";
 import { supabase } from "../lib/supabase.js";
+import { getDayName } from "./consultation.service.js";
 
 interface dashboardData {
     avatarUrl?: string;
@@ -46,16 +47,6 @@ interface weeklyProgressResponse {
     totalCalories: number;
     dailyCalorieGoal: number;
 }
-
-const dayNames = [
-    "Minggu",
-    "Senin",
-    "Selasa",
-    "Rabu",
-    "Kamis",
-    "Jum'at",
-    "Sabtu",
-];
 
 const getPregnancyProfile = async (userId: string) => {
     const [profileData] = await db
@@ -279,7 +270,8 @@ export class DashboardService {
         const weekProgress: weeklyProgressDay[] = [];
         for (let i = 1; i < 8; i++) {
             const dayOfWeekNum = i === 7 ? 0 : i;
-            const dayName = dayNames[dayOfWeekNum];
+            const consultationDayNum = dayOfWeekNum === 0 ? 7 : dayOfWeekNum;
+            const dayName = getDayName(consultationDayNum);
             const dayDate = new Date(startOfWeek);
             dayDate.setDate(startOfWeek.getDate() + (i - 1));
             const day = String(dayDate.getDate()).padStart(2, '0');
@@ -288,7 +280,7 @@ export class DashboardService {
             const dateString = `${day}-${month}-${year}`;
             
             weekProgress.push({
-                day: dayName!,
+                day: dayName,
                 date: dateString,
                 calories: caloriesByDay[dayOfWeekNum]!,
                 foods: Array.from(foodsByDay[dayOfWeekNum]!),
