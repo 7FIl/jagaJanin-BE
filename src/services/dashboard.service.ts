@@ -82,11 +82,8 @@ const getFoodDetailsByName = async (foodName: string) => {
         throw new Error(`Food details not found for ${foodName}`);
     }
 
-    const { data } = await supabase.storage
-        .from("food")
-        .createSignedUrl(foodData.foodPicture, 60 * 60);
-
-    return { ...foodData, foodPicture: data!.signedUrl };
+    const { data } = supabase.storage.from("food").getPublicUrl(foodData.foodPicture);
+    return { ...foodData, foodPicture: data.publicUrl };
 };
 
 const calculateDayRange = (dateString: string) => {

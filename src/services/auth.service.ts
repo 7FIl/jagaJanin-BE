@@ -6,6 +6,7 @@ import crypto from "crypto";
 import "dotenv/config";
 import { FastifyInstance } from "fastify";
 import { sendVerificationEmail } from "../lib/resend.js";
+import { supabase } from "../lib/supabase.js";
 
 const jwtExp = process.env.JWT_EXPIRATION as string;
 
@@ -34,7 +35,7 @@ export interface userResponse {
 
 export interface userDetail extends userResponse {
     phoneNumber: string;
-    avatarUrl: string;
+    avatarUrl?: string;
 }
 
 export interface otpInput {
@@ -112,7 +113,17 @@ export class AuthService {
             throw new Error("User not found");
         }
 
-        return { id: user.id, fullName: user.full_name, email: user.email, role: user.role, phoneNumber: user.phone_number, avatarUrl: user.avatar_url };
+        let avatarUrl: string | undefined;
+        if (user.avatar_url) {
+            if (user.avatar_url.startsWith("http")) {
+                avatarUrl = user.avatar_url; // External URL from Google
+            } else {
+                const { data } = supabase.storage.from("avatars").getPublicUrl(user.avatar_url);
+                avatarUrl = data.publicUrl;
+            }
+        }
+
+        return { id: user.id, fullName: user.full_name, email: user.email, role: user.role, phoneNumber: user.phone_number, avatarUrl };
     }
 
     async generateRefreshToken(userId: string): Promise<string> {
@@ -224,18 +235,14 @@ export class AuthService {
         return true;
     }
 
-    /**
-     * Handle Google OAuth callback
-     * Creates or updates user from Google account data
-     */
+    
     async handleGoogleCallback(googlePayload: any): Promise<userResponse> {
-        const { email, name, picture } = googlePayload;
+        const { email, name, picture, sub } = googlePayload;
 
         if (!email) {
             throw new Error("Email not provided from Google");
         }
 
-        // Check if user exists
         const [existingUser] = await db
             .select()
             .from(users)
@@ -243,11 +250,15 @@ export class AuthService {
             .limit(1);
 
         if (existingUser) {
-            // Update avatar URL if provided
             if (picture && existingUser.avatar_url !== picture) {
                 await db
                     .update(users)
-                    .set({ avatar_url: picture })
+                    .set({ 
+                        avatar_url: picture,
+                        google_id: sub,
+                        updated_at: new Date(),
+                        is_verified: true,
+                     })
                     .where(eq(users.id, existingUser.id));
             }
 
@@ -259,7 +270,6 @@ export class AuthService {
             };
         }
 
-        // Create new user from Google data
         const defaultPassword = crypto.randomBytes(32).toString("hex");
         const hashedPassword = await bcrypt.hash(defaultPassword, 10);
 
@@ -269,9 +279,10 @@ export class AuthService {
                 full_name: name || email.split("@")[0],
                 email: email,
                 password: hashedPassword,
-                avatar_url: picture || null,
-                is_verified: true, // Google accounts are assumed verified
-                phone_number: "", // Will be updated by user later
+                avatar_url: picture,
+                is_verified: true,
+                phone_number: "",
+                google_id: sub,
             })
             .returning({
                 id: users.id,

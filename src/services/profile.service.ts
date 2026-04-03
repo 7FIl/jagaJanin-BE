@@ -43,15 +43,17 @@ export class ProfileService {
     async userProfile(userId: string): Promise<userProfileResponse> {
         const user = await getUserId(userId);
 
-        const { data } = await supabase.storage
-            .from("avatars")
-            .createSignedUrl(user.avatar_url, 60 * 60);
-
-        if (!data) {
-            throw new Error("Failed to generate signed URL");
+        let avatarUrl: string | undefined;
+        if (user.avatar_url) {
+            if (user.avatar_url.startsWith("http")) {
+                avatarUrl = user.avatar_url; // External URL from Google
+            } else {
+                const { data } = supabase.storage.from("avatars").getPublicUrl(user.avatar_url);
+                avatarUrl = data.publicUrl;
+            }
         }
 
-        return { fullName: user.full_name, email: user.email, phoneNumber: user.phone_number, avatarUrl: data.signedUrl };
+        return { fullName: user.full_name, email: user.email, phoneNumber: user.phone_number, avatarUrl };
     }
 
     async updateEmail(userId: string, email: string,password: string): Promise<string> {
@@ -170,7 +172,6 @@ export class ProfileService {
             throw new Error("Invalid file type. Only images are allowed.");
         }
         
-        
         const buffer = await file.toBuffer();
         const extension = file.filename.split('.').pop();
         const filePath = `avatars/${userId}.${Date.now()}.${extension}`;
@@ -191,6 +192,10 @@ export class ProfileService {
                 .remove([user.avatar_url]);
         }
         
+        const { data } = await supabase.storage
+            .from("avatars")
+            .getPublicUrl(filePath);
+
         await db.
             update(users)
             .set({ avatar_url: filePath, updated_at: new Date() })
@@ -203,15 +208,16 @@ export class ProfileService {
     async avatarUrl(userId: string): Promise<string> {
         const user = await getUserId(userId);
 
-        const { data } = await supabase.storage            
-            .from("avatars")
-            .createSignedUrl(user.avatar_url, 60 * 60);
-
-        if (!data) {
-            throw new Error("Failed to generate signed URL");
+        if (!user.avatar_url) {
+            throw new Error("User has no avatar");
         }
 
-        return data.signedUrl;
+        if (user.avatar_url.startsWith("http")) {
+            return user.avatar_url; // External URL from Google
+        }
+
+        const { data } = supabase.storage.from("avatars").getPublicUrl(user.avatar_url);
+        return data.publicUrl;
     }
 }
 
