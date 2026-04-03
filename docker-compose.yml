@@ -2,22 +2,17 @@ services:
 
   app:
     build: .
-    container_name: login-demo-app
+    container_name: ragil_be
     restart: unless-stopped
     ports:
       - "${API_PORT}:${API_PORT}"
     environment:
       DATABASE_URL: ${DATABASE_URL}
-  Database:
-    image: postgres:16-alpine
-    container_name: login-demo-db
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_NAME}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+    env_file:
+      - .env
+    networks:
+      - postgres_network
 
-volumes:
-  postgres_data:
+networks:
+  postgres_network:
+    external: true

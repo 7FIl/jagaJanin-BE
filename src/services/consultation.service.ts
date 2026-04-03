@@ -137,7 +137,10 @@ export class ConsultationService {
         const totalPages = Math.ceil(total / limit);
         
         // Paginate in memory
-        const paginatedDoctors = allDoctors.slice(offset, offset + limit);
+        const paginatedDoctors = allDoctors.slice(offset, offset + limit).map(doc => ({
+            ...doc,
+            rating: String(doc.rating)
+        }));
 
         return {
             data: paginatedDoctors as doctorRecomendation[],
@@ -150,8 +153,8 @@ export class ConsultationService {
         };
     }
 
-    async getDoctorProfile(userId: string): Promise<doctorProfileResponse> {
-        const [doctorData] = await db
+    async getDoctorProfile(doctorId: string): Promise<doctorProfileResponse> {
+        const doctorDataArray = await db
             .select({
                 id: doctor_profile.id,
                 name: users.full_name,
@@ -166,7 +169,9 @@ export class ConsultationService {
             })
             .from(doctor_profile)
             .innerJoin(users, eq(doctor_profile.user_id, users.id))
-            .where(eq(doctor_profile.user_id, userId));
+            .where(eq(doctor_profile.id, doctorId));
+        
+        const doctorData = doctorDataArray.length > 0 ? doctorDataArray[0] : null;
 
         if (!doctorData) {
             throw new Error("Doctor not found");
@@ -193,6 +198,7 @@ export class ConsultationService {
 
         return {
             ...doctorData,
+            rating: String(doctorData.rating),
             practiceSchedule: schedules,
         };
     }
@@ -223,13 +229,17 @@ export class ConsultationService {
         const upcoming: consultationBefore[] = [];
 
         for (const cons of consultations) {
-            const consTime = new Date(cons.startTime);
-            const constEndTime = new Date(cons.endTime);
+            // Ensure dates are Date objects
+            const consTime = cons.startTime instanceof Date ? cons.startTime : new Date(cons.startTime as any);
+            const constEndTime = cons.endTime instanceof Date ? cons.endTime : new Date(cons.endTime as any);
+            
             const baseData = {
-                doctorName: cons.doctorName,
-                date: consTime.toISOString().split("T")[0]!,
-                time: consTime.toISOString().split("T")[1]!,
+                id: cons.id,
+                doctorName: cons.doctorName || "Unknown Doctor",
+                date: consTime.toISOString().split("T")[0] || "",
+                time: consTime.toISOString().split("T")[1]?.split(".")[0] || "",
             };
+            
             if (!cons.isDone && constEndTime < now) {
                 await db
                     .update(consultation)
@@ -237,16 +247,13 @@ export class ConsultationService {
                     .where(eq(consultation.id, cons.id));
                 done.push({
                     ...baseData,
-                    id: cons.id,
-                    isDone: cons.isDone,
+                    isDone: true,
                     isDoneRating: cons.isDoneRating,
-
                 });
             } else {
                 upcoming.push({
                     ...baseData,
-                    id: cons.id,
-                    isTimeToConsult: consTime.getTime() > now.getTime() && constEndTime.getTime() < now.getTime(),
+                    isTimeToConsult: consTime <= now && constEndTime > now,
                 });
             }
         }
@@ -282,7 +289,7 @@ export class ConsultationService {
     }
 
     async getConsultationData(userId: string): Promise<consultationData> {
-        const [userConsultation] = await db
+        const userConsultations = await db
             .select({
                 id: consultation.id,
                 doctorName: users.full_name,
@@ -298,6 +305,8 @@ export class ConsultationService {
             ))
             .orderBy(desc(consultation.start_time))
             .limit(1);
+
+        const userConsultation = userConsultations.length > 0 ? userConsultations[0] : null;
 
         const consultationSchedule: consultationScheduleResponse = userConsultation
             ? {
@@ -322,7 +331,7 @@ export class ConsultationService {
     }
 
     async callDoctor(userId: string): Promise<string> {
-            const [consultationData] = await db
+            const consultationDataArray = await db
             .select({
                 doctorName: users.full_name,
                 doctorPhone: users.phone_number,
@@ -338,6 +347,8 @@ export class ConsultationService {
             ))
             .orderBy(desc(consultation.start_time))
             .limit(1);
+
+        const consultationData = consultationDataArray.length > 0 ? consultationDataArray[0] : null;
 
         if (!consultationData) {
             throw new Error("No upcoming consultation found");
@@ -416,7 +427,7 @@ export class ConsultationService {
     }
 
     async getPaymentConfirmation(consultationId: string, userId: string): Promise<paymentConfirmationResponse> {
-            const [verifyConsultation] = await db
+            const verifyConsultations = await db
                 .select({
                     doctorName: users.full_name,
                     specialty: doctor_profile.specialization,
@@ -431,6 +442,8 @@ export class ConsultationService {
                     eq(consultation.user_id, userId)
                 ))
                 .limit(1);
+            
+            const verifyConsultation = verifyConsultations.length > 0 ? verifyConsultations[0] : null;
             
             if (!verifyConsultation) {
                 throw new Error("Consultation not found");

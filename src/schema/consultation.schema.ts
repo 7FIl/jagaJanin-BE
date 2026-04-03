@@ -53,9 +53,9 @@ export const getDoctorProfileSchema = {
     description: "Get detailed profile of a specific doctor including credentials and availability",
     params: {
         type: "object",
-        required: ["doctorUserId"],
+        required: ["doctorId"],
         properties: {
-            doctorUserId: { type: "string", description: "Doctor user ID" }
+            doctorId: { type: "string", description: "Doctor profile ID" }
         },
         additionalProperties: false
     },

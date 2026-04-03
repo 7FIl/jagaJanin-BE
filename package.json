@@ -16,7 +16,8 @@
     "start": "node ./dist/index.js",
     "database": "docker compose -f docker-compose.dev.yml up -d",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate"
+    "db:migrate": "drizzle-kit migrate",
+    "db:seed": "tsx src/db/seed.ts"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",

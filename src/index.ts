@@ -118,7 +118,7 @@ app.register(kiaRoutes, { prefix: "/api/v1/kia" });
 app.register(consultationRoutes, { prefix: "/api/v1/consultation" });
 app.register(paymentRoutes, { prefix: "/api/v1/payment" });
 
-app.listen({ port: Number(PORT) }, (err, address) => {
+app.listen({ port: Number(PORT), host: "0.0.0.0" }, (err, address) => {
   if (err) {
     console.error("Failed to start server:", err);
     app.log.error(err);

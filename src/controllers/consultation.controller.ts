@@ -43,12 +43,12 @@ export class ConsultationController {
     }
 
     async getDoctorProfile(
-        request: FastifyRequest<{ Params: { doctorUserId: string } }>,
+        request: FastifyRequest<{ Params: { doctorId: string } }>,
         reply: FastifyReply,
     ) {
         try {
-            const { doctorUserId } = request.params;
-            const profile = await consultationService.getDoctorProfile(doctorUserId);
+            const { doctorId } = request.params;
+            const profile = await consultationService.getDoctorProfile(doctorId);
             return reply.status(200).send({
                 success: true,
                 data: profile,
