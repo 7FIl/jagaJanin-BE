@@ -13,11 +13,11 @@ interface xenditInvoiceResponse {
 }
 
 
-export interface ConsultationPaymentRequest {
+export interface consultationPaymentRequest {
     consultationId: string;
 }
 
-export interface PaymentWebhookRequest {
+export interface paymentWebhookRequest {
     id: string;
     status: string;
     external_id: string;
