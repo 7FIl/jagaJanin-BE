@@ -8,7 +8,7 @@ export async function consultationRoutes(fastify: FastifyInstance) {
     fastify.get<{ Params: { doctorId: string } }>
     ("/doctors/:doctorId",{ schema: getDoctorProfileSchema,onRequest: [fastify.authenticate] }, consultationController.getDoctorProfile);
     fastify.get<{ Querystring: { page?: string; limit?: string } }>
-    ("/history",{ schema: getConsultationHistorySchema,onRequest: [fastify.authenticate]},consultationController.getConsultationHistory);
+    ("/history",{ schema: getConsultationHistorySchema, onRequest: [fastify.authenticate]},consultationController.getConsultationHistory);
     fastify.get<{ Querystring: { page?: string; limit?: string } }>
     ("/data",{ schema: getConsultationDataSchema,onRequest: [fastify.authenticate]},consultationController.getConsultationData);
     fastify.post<{ Body: { doctorId: string; startTime: string; endTime: string } }>

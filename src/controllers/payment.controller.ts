@@ -1,5 +1,6 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { paymentService } from "../services/payment.service.js";
+import { AppError } from "../lib/errorHandler.js";
 import "dotenv/config";
 
 interface ConsultationPaymentRequest {
@@ -22,21 +23,15 @@ export const validateXenditWebhookToken = async (
     const callbackToken = request.headers["x-callback-token"];
 
     if (!XENDIT_WEBHOOK_SECRET) {
-        throw new Error("XENDIT_WEBHOOK_SECRET environment variable is not set");
+        throw new AppError("XENDIT_WEBHOOK_SECRET environment variable is not set", 500);
     }
 
     if (!callbackToken) {
-        return reply.status(401).send({
-            success: false,
-            message: "Missing X-Callback-Token header",
-        });
+        throw new AppError("Missing X-Callback-Token header", 401);
     }
 
     if (callbackToken !== XENDIT_WEBHOOK_SECRET) {
-        return reply.status(403).send({
-            success: false,
-            message: "Invalid webhook token",
-        });
+        throw new AppError("Invalid webhook token", 403);
     }
 };
 
@@ -46,29 +41,19 @@ export class PaymentController {
         request: FastifyRequest<{ Body: ConsultationPaymentRequest }>,
         reply: FastifyReply,
     ) {
-        try {
-            const { consultationId } = request.body;
-            const userId = request.user.sub;
+        const { consultationId } = request.body;
+        const userId = request.user.sub;
 
-            const paymentData = await paymentService.createConsultationPayment(
-                consultationId,
-                userId
-            );
+        const paymentData = await paymentService.createConsultationPayment(
+            consultationId,
+            userId
+        );
 
-            return reply.status(201).send({
-                success: true,
-                data: paymentData,
-                message: "Payment invoice created successfully",
-            });
-        } catch (error) {
-            const errorMessage =
-                error instanceof Error ? error.message : "Failed to create payment";
-
-            return reply.status(400).send({
-                success: false,
-                message: errorMessage,
-            });
-        }
+        return reply.status(201).send({
+            success: true,
+            data: paymentData,
+            message: "Payment invoice created successfully",
+        });
     }
 
     // Check payment status
@@ -76,25 +61,15 @@ export class PaymentController {
         request: FastifyRequest<{ Params: { invoiceId: string } }>,
         reply: FastifyReply,
     ) {
-        try {
-            const { invoiceId } = request.params;
+        const { invoiceId } = request.params;
 
-            const status = await paymentService.checkPaymentStatus(invoiceId);
+        const status = await paymentService.checkPaymentStatus(invoiceId);
 
-            return reply.status(200).send({
-                success: true,
-                data: { status },
-                message: "Payment status retrieved successfully",
-            });
-        } catch (error) {
-            const errorMessage =
-                error instanceof Error ? error.message : "Failed to check payment status";
-
-            return reply.status(400).send({
-                success: false,
-                message: errorMessage,
-            });
-        }
+        return reply.status(200).send({
+            success: true,
+            data: { status },
+            message: "Payment status retrieved successfully",
+        });
     }
 
     // Xendit webhook callback handler
@@ -102,24 +77,14 @@ export class PaymentController {
         request: FastifyRequest<{ Body: PaymentWebhookRequest }>,
         reply: FastifyReply,
     ) {
-        try {
-            const { id, status } = request.body;
+        const { id, status } = request.body;
 
-            await paymentService.handlePaymentWebhook(id, status);
+        await paymentService.handlePaymentWebhook(id, status);
 
-            return reply.status(200).send({
-                success: true,
-                message: "Webhook processed successfully",
-            });
-        } catch (error) {
-            const errorMessage =
-                error instanceof Error ? error.message : "Failed to process webhook";
-
-            return reply.status(400).send({
-                success: false,
-                message: errorMessage,
-            });
-        }
+        return reply.status(200).send({
+            success: true,
+            message: "Webhook processed successfully",
+        });
     }
 
     // Get payment history
@@ -127,25 +92,15 @@ export class PaymentController {
         request: FastifyRequest,
         reply: FastifyReply,
     ) {
-        try {
-            const userId = request.user.sub;
+        const userId = request.user.sub;
 
-            const payments = await paymentService.getPaymentHistory(userId);
+        const payments = await paymentService.getPaymentHistory(userId);
 
-            return reply.status(200).send({
-                success: true,
-                data: payments,
-                message: "Payment history retrieved successfully",
-            });
-        } catch (error) {
-            const errorMessage =
-                error instanceof Error ? error.message : "Failed to get payment history";
-
-            return reply.status(400).send({
-                success: false,
-                message: errorMessage,
-            });
-        }
+        return reply.status(200).send({
+            success: true,
+            data: payments,
+            message: "Payment history retrieved successfully",
+        });
     }
 }
 

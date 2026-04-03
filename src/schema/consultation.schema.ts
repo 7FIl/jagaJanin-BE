@@ -114,7 +114,7 @@ export const getDoctorProfileSchema = {
 export const getConsultationHistorySchema = {
     tags: ["Consultation"],
     summary: "Get consultation history",
-    description: "Get user's past consultations with pagination support",
+    description: "Get user's consultation history separated into completed and upcoming consultations with pagination",
     querystring: {
         type: "object",
         properties: {
@@ -130,22 +130,69 @@ export const getConsultationHistorySchema = {
             properties: {
                 success: { type: "boolean", description: "Operation success status" },
                 data: {
-                    type: "array",
-                    description: "List of past consultations",
-                    items: {
-                        type: "object",
-                        properties: {
-                            id: { type: "string", description: "Consultation unique identifier" },
-                            doctorId: { type: "string", description: "Doctor unique identifier" },
-                            doctorName: { type: "string", description: "Doctor full name" },
-                            specialty: { type: "string", description: "Doctor specialty" },
-                            consultationDate: { type: "string", format: "date-time", description: "Consultation start time" },
-                            duration: { type: "integer", description: "Consultation duration in minutes" },
-                            status: { type: "string", enum: ["COMPLETED", "CANCELLED", "SCHEDULED", "ONGOING"], description: "Consultation status" },
-                            paymentStatus: { type: "string", enum: ["PAID", "PENDING", "FAILED"], description: "Payment status" },
-                            amount: { type: "number", description: "Consultation fee in IDR" },
-                            rating: { type: "number", minimum: 0, maximum: 5, description: "User's rating if completed" },
-                            notes: { type: "string", description: "Consultation notes/summary" }
+                    type: "object",
+                    description: "Consultation history separated by status",
+                    properties: {
+                        done: {
+                            type: "object",
+                            description: "Completed consultations",
+                            properties: {
+                                data: {
+                                    type: "array",
+                                    description: "List of completed consultations",
+                                    items: {
+                                        type: "object",
+                                        properties: {
+                                            id: { type: "string", description: "Consultation unique identifier" },
+                                            doctorName: { type: "string", description: "Doctor full name" },
+                                            date: { type: "string", format: "date", description: "Consultation date" },
+                                            time: { type: "string", description: "Consultation start time" },
+                                            isDone: { type: "boolean", description: "Consultation status" },
+                                            isDoneRating: { type: "boolean", description: "Whether user has rated this consultation" }
+                                        }
+                                    }
+                                },
+                                pagination: {
+                                    type: "object",
+                                    description: "Pagination info",
+                                    properties: {
+                                        page: { type: "integer", description: "Current page" },
+                                        limit: { type: "integer", description: "Items per page" },
+                                        total: { type: "integer", description: "Total completed consultations" },
+                                        totalPages: { type: "integer", description: "Total number of pages" }
+                                    }
+                                }
+                            }
+                        },
+                        upcoming: {
+                            type: "object",
+                            description: "Upcoming consultations",
+                            properties: {
+                                data: {
+                                    type: "array",
+                                    description: "List of upcoming consultations",
+                                    items: {
+                                        type: "object",
+                                        properties: {
+                                            id: { type: "string", description: "Consultation unique identifier" },
+                                            doctorName: { type: "string", description: "Doctor full name" },
+                                            date: { type: "string", format: "date", description: "Consultation date" },
+                                            time: { type: "string", description: "Consultation start time" },
+                                            isTimeToConsult: { type: "boolean", description: "Whether it's time to start the consultation" }
+                                        }
+                                    }
+                                },
+                                pagination: {
+                                    type: "object",
+                                    description: "Pagination info",
+                                    properties: {
+                                        page: { type: "integer", description: "Current page" },
+                                        limit: { type: "integer", description: "Items per page" },
+                                        total: { type: "integer", description: "Total upcoming consultations" },
+                                        totalPages: { type: "integer", description: "Total number of pages" }
+                                    }
+                                }
+                            }
                         }
                     }
                 },
