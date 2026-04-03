@@ -2,6 +2,7 @@ import { db } from "../db/index.js";
 import { foods, pregnancy_profile, users, serving } from "../db/schema.js";
 import { eq } from "drizzle-orm";
 import { getUserId } from "./profile.service.js";
+import { AppError } from "../lib/errorHandler.js";
 
 export interface formInput {
     foodPreference: number;
@@ -56,7 +57,7 @@ const activityMultiplier = (activityLevel: number): number => {
         case 3:
             return 1.725;
         default:
-            throw new Error("Invalid activity level");
+            throw new AppError("Invalid activity level", 400);
     }
 }
 
@@ -102,12 +103,12 @@ export async function mealRecomendation(mealCalories: number, foodPreferenceId: 
             .where(eq(foods.category, category));
 
         if (availableFoods.length === 0) {
-            throw new Error(`No foods found for category ${category}`);
+            throw new AppError(`No foods found for category ${category}`, 400);
         }
 
         let bestMatch = availableFoods[0];
         if (!bestMatch) {
-            throw new Error(`No best match found for category ${category}`);
+            throw new AppError(`No best match found for category ${category}`, 400);
         }
         let bestQuantity = Math.ceil(targetCalories / bestMatch.servingCalories);
         let bestTotalCalories = bestQuantity * bestMatch.servingCalories;
@@ -143,12 +144,12 @@ export async function mealRecomendation(mealCalories: number, foodPreferenceId: 
             .where(eq(foods.id, foodId));
 
         if (foodData.length === 0) {
-            throw new Error(`Food with ID ${foodId} not found`);
+            throw new AppError(`Food with ID ${foodId} not found`, 404);
         }
 
         const food = foodData[0];
         if (!food) {
-            throw new Error(`Food data not found for ID ${foodId}`);
+            throw new AppError(`Food data not found for ID ${foodId}`, 404);
         }
         const quantity = Math.ceil(targetCalories / food.servingCalories);
 
@@ -178,7 +179,7 @@ export class FormService {
         const user = await getUserId(id);
 
         if (user.complete_onboarding) {
-            throw new Error("Onboarding form already completed");
+            throw new AppError("Onboarding form already completed", 409);
         }
 
         const bmr = calculateBmr(input.weight, input.height, input.age);
@@ -202,7 +203,7 @@ export class FormService {
         .returning();
 
         if (!pregnancyProfile) {
-            throw new Error("Failed to create pregnancy profile");
+            throw new AppError("Failed to create pregnancy profile", 500);
         }
 
         const mealRecommendation = await mealRecomendation(

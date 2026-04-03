@@ -5,6 +5,7 @@ import { calculateTrimester } from "./form.service.js";
 import { getPregnancyWeeks } from "./pregnancy.service.js";
 import { stringify } from "csv-stringify/sync";
 import PDFDocument from "pdfkit";
+import { AppError } from "../lib/errorHandler.js";
 
 interface kiaResponse {
     kiaData: kiaDataResponse;
@@ -108,7 +109,7 @@ async function getKiaDataByUserId(userId: string) {
         .limit(1);
     
     if (!kiaData) {
-        throw new Error("KIA data not found");
+        throw new AppError("KIA data not found", 404);
     }
     return kiaData;
 }
@@ -122,7 +123,7 @@ async function getLatestCheckupByKiaId(kiaId: string) {
         .limit(1);
     
     if (!latestCheckup) {
-        throw new Error("No checkup data found");
+        throw new AppError("No checkup data found", 404);
     }
     return latestCheckup;
 }
@@ -218,7 +219,7 @@ export class kiaService {
         if (input.controlDate !== undefined) updateValues.checkup_date = input.controlDate;
 
         if (Object.keys(updateValues).length === 0) {
-            throw new Error("At least one field must be provided");
+            throw new AppError("At least one field must be provided", 400);
         }
 
         const [checkupData] = await db
@@ -228,7 +229,7 @@ export class kiaService {
             .returning();
 
         if (!checkupData) {
-            throw new Error("Failed to update facility checkup data");
+            throw new AppError("Failed to update facility checkup data", 400);
         }
         
         return {
@@ -283,7 +284,7 @@ export class kiaService {
         if (input.urineProtein !== undefined) updateValues.urine_protein = input.urineProtein;
 
         if (Object.keys(updateValues).length === 0) {
-            throw new Error("At least one field must be provided");
+            throw new AppError("At least one field must be provided", 400);
         }
 
         const [updatedCheckup] = await db
@@ -293,7 +294,7 @@ export class kiaService {
             .returning();
 
         if (!updatedCheckup) {
-            throw new Error("Failed to update physical checkup data");
+            throw new AppError("Failed to update physical checkup data", 400);
         }
         const weight = Number(updatedCheckup.weight);
         const height = Number(updatedCheckup.height);
@@ -361,7 +362,7 @@ export class kiaService {
         if (input.isCompleted !== undefined) updateValues.is_completed = input.isCompleted;
 
         if (Object.keys(updateValues).length === 0) {
-            throw new Error("At least one field must be provided");
+            throw new AppError("At least one field must be provided", 400);
         }
 
         const [updatedChecklist] = await db
@@ -371,7 +372,7 @@ export class kiaService {
             .returning();
         
             if (!updatedChecklist) {
-            throw new Error("Failed to update checklist data");
+            throw new AppError("Failed to update checklist data", 400);
         }
 
         const checklistItems = [];
@@ -452,7 +453,7 @@ export class kiaService {
         if (input.urineProtein !== undefined) updateValues.urine_protein = input.urineProtein;
 
         if (Object.keys(updateValues).length === 0) {
-            throw new Error("At least one field must be provided");
+            throw new AppError("At least one field must be provided", 400);
         }
 
         const [updatedCheckup] = await db
@@ -462,7 +463,7 @@ export class kiaService {
             .returning();
         
             if (!updatedCheckup) {
-            throw new Error("Failed to update lab data");
+            throw new AppError("Failed to update lab data", 400);
         }
 
         return {
@@ -551,7 +552,7 @@ export class kiaService {
             .where(eq(checkup.kia_id, kiaData.id));
 
         if (!allCheckups || allCheckups.length === 0) {
-            throw new Error("No checkup data found");
+            throw new AppError("No checkup data found", 404);
         }
 
         const [checklistData] = await db
@@ -619,7 +620,7 @@ export class kiaService {
             .where(eq(checkup.kia_id, kiaData.id));
 
         if (!allCheckups || allCheckups.length === 0) {
-            throw new Error("No checkup data found");
+            throw new AppError("No checkup data found", 404);
         }
 
         const [checklistData] = await db

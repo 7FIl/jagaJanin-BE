@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm/sql/expressions/conditions";
 import { db } from "../db/index.js";
 import { kia, pregnancy_profile } from "../db/schema.js";
+import { AppError } from "../lib/errorHandler.js";
 
 function calculateWeeks(hpht: Date): number {
     const currentDate = new Date();
@@ -26,7 +27,7 @@ export async function getPregnancyWeeks(userId: string): Promise<number> {
         .limit(1);
 
     if (!pregnancy) {
-        throw new Error("Pregnancy profile not found");
+        throw new AppError("Pregnancy profile not found", 404);
     }
 
     const [kiaData] = await db

@@ -3,6 +3,7 @@ import { foods, pregnancy_profile, users } from "../db/schema.js";
 import { eq } from "drizzle-orm";
 import { supabase } from "../lib/supabase.js";
 import bcrypt from "bcrypt";
+import { AppError } from "../lib/errorHandler.js";
 
 export interface userProfileResponse {
     fullName: string;
@@ -31,7 +32,7 @@ export async function getUserId(id: string) {
         .limit(1);
 
     if (!user) {
-        throw new Error("User not found");
+        throw new AppError("User not found", 404);
     }
 
     return user;
@@ -62,7 +63,7 @@ export class ProfileService {
         const isPasswordValid = await bcrypt.compare(password, user.password);
 
         if (!isPasswordValid) {
-            throw new Error("Invalid password");
+            throw new AppError("Invalid password", 401);
         }
 
         const [updatedUser] = await db
@@ -72,7 +73,7 @@ export class ProfileService {
         .returning({ fullName: users.full_name, email: users.email })
 
         if (!updatedUser) {
-            throw new Error("Failed to update user email");
+            throw new AppError("Failed to update user email", 400);
         }
 
         return updatedUser.email;
@@ -88,15 +89,15 @@ export class ProfileService {
             .returning({ fullName: users.full_name, email: users.email, phoneNumber: users.phone_number })
 
         if (!updatedUser) {
-            throw new Error("User not found");
+            throw new AppError("User not found", 404);
         }
 
         if (email !== undefined && password === undefined){
-            throw new Error("Password is required to change email");
+            throw new AppError("Password is required to change email", 400);
         }
 
         if (email === undefined && password !== undefined) {
-            throw new Error("Email is required to change password");
+            throw new AppError("Email is required to change password", 400);
         }
 
         if (email !== undefined && password !== undefined) {
@@ -115,7 +116,7 @@ export class ProfileService {
             .returning({ phoneNumber: users.phone_number });
 
         if (!updatedUser) {
-            throw new Error("Failed to update phone number");
+            throw new AppError("Failed to update phone number", 400);
         }
 
         return updatedUser.phoneNumber;
@@ -127,7 +128,7 @@ export class ProfileService {
         const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
 
         if (!isPasswordValid) {
-            throw new Error("Invalid current password");
+            throw new AppError("Invalid current password", 401);
         }
 
         const hashedNewPassword = await bcrypt.hash(newPassword, 10);
@@ -149,7 +150,7 @@ export class ProfileService {
             .limit(1);
 
         if (!foodPrefExists) {
-            throw new Error("Food does not exist");
+            throw new AppError("Food does not exist", 404);
         }
 
         await db
@@ -165,11 +166,11 @@ export class ProfileService {
         const user = await getUserId(userId);
 
         if (!file) {
-            throw new Error("No file uploaded");
+            throw new AppError("No file uploaded", 400);
         }
         
         if (!file.mimetype.startsWith("image/")) {
-            throw new Error("Invalid file type. Only images are allowed.");
+            throw new AppError("Invalid file type. Only images are allowed.", 400);
         }
         
         const buffer = await file.toBuffer();
@@ -183,7 +184,7 @@ export class ProfileService {
         });
         
         if (error) {
-            throw new Error(error.message);
+            throw new AppError(error.message, 500);
         }
         
         if (user.avatar_url !== "avatars/default.png") {
@@ -209,7 +210,7 @@ export class ProfileService {
         const user = await getUserId(userId);
 
         if (!user.avatar_url) {
-            throw new Error("User has no avatar");
+            throw new AppError("User has no avatar", 404);
         }
 
         if (user.avatar_url.startsWith("http")) {

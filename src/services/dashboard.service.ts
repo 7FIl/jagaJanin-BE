@@ -6,6 +6,7 @@ import { calculateTrimester, mealRecomendation } from "./form.service.js";
 import { getPregnancyWeeks } from "./pregnancy.service.js";
 import { supabase } from "../lib/supabase.js";
 import { getDayName } from "./consultation.service.js";
+import { AppError } from "../lib/errorHandler.js";
 
 interface dashboardData {
     avatarUrl?: string;
@@ -59,7 +60,7 @@ const getPregnancyProfile = async (userId: string) => {
         .limit(1);
     
     if (!profileData) {
-        throw new Error("Pregnancy profile not found");
+        throw new AppError("Pregnancy profile not found", 404);
     }
     return profileData;
 };
@@ -79,7 +80,7 @@ const getFoodDetailsByName = async (foodName: string) => {
         .limit(1);
 
     if (!foodData) {
-        throw new Error(`Food details not found for ${foodName}`);
+        throw new AppError(`Food details not found for ${foodName}`, 404);
     }
 
     const { data } = supabase.storage.from("food").getPublicUrl(foodData.foodPicture);
@@ -350,7 +351,7 @@ export class DashboardService {
             .limit(1);
 
         if (!foodData) {
-            throw new Error("Food not found");
+            throw new AppError("Food not found", 404);
         }
 
         const [newMeal] = await db
@@ -383,7 +384,7 @@ export class DashboardService {
             .limit(1);
 
         if (!existingMeal) {
-            throw new Error("Meal log not found");
+            throw new AppError("Meal log not found", 404);
         }
 
         if (foodId) {
@@ -394,7 +395,7 @@ export class DashboardService {
                 .limit(1);
 
             if (!foodData) {
-                throw new Error("Food not found");
+                throw new AppError("Food not found", 404);
             }
         }
 

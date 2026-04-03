@@ -7,6 +7,7 @@ import "dotenv/config";
 import { FastifyInstance } from "fastify";
 import { sendVerificationEmail } from "../lib/resend.js";
 import { supabase } from "../lib/supabase.js";
+import { AppError } from "../lib/errorHandler.js";
 
 const jwtExp = process.env.JWT_EXPIRATION as string;
 
@@ -86,17 +87,17 @@ export class AuthService {
             .limit(1);
 
         if (!user) {
-            throw new Error("Invalid credentials");
+            throw new AppError("Invalid credentials", 401);
         }
 
         const isPasswordValid = await bcrypt.compare(input.password, user.password);
         if (!isPasswordValid) {
-            throw new Error("Invalid credentials");
+            throw new AppError("Invalid credentials", 401);
         }
 
         const isVerified = user.is_verified;
         if (!isVerified) {
-            throw new Error("Please verify your email before logging in");
+            throw new AppError("Please verify your email before logging in", 401);
         }
         
         return { id: user.id, fullName: user.full_name, email: user.email, role: user.role };
@@ -110,7 +111,7 @@ export class AuthService {
             .limit(1);
 
         if (!user) {
-            throw new Error("User not found");
+            throw new AppError("User not found", 404);
         }
 
         let avatarUrl: string | undefined;
@@ -155,7 +156,7 @@ export class AuthService {
         const [tokenId, secret] = token.split(".") as [string, string];
 
         if (!tokenId || !secret) {
-            throw new Error("Invalid refresh token format");
+            throw new AppError("Invalid refresh token format", 401);
         }
 
         const [storedToken] = await db
@@ -165,13 +166,13 @@ export class AuthService {
             .limit(1);
         
         if (!storedToken) {
-            throw new Error("Please re-login to get a new refresh token");
+            throw new AppError("Please re-login to get a new refresh token", 401);
         }
         
         const isTokenValid = await bcrypt.compare(token, storedToken.token);
 
         if (!isTokenValid || storedToken.expires_at < new Date()) {
-            throw new Error("Expired refresh token");
+            throw new AppError("Expired refresh token", 401);
         }
 
         return { valid: true, userId: storedToken.user_id, tokenId };
@@ -181,7 +182,7 @@ export class AuthService {
         const { valid, userId, tokenId } = await this.validateRefreshToken(token);
 
         if (!valid || !userId || !tokenId) {
-            throw new Error("Please re-login to get a new refresh token");
+            throw new AppError("Please re-login to get a new refresh token", 401);
         }
 
         await db.delete(refresh_tokens).where(eq(refresh_tokens.id, tokenId));
@@ -222,12 +223,12 @@ export class AuthService {
             .limit(1);
         
         if (!otpRecord) {
-            throw new Error("OTP not found");
+            throw new AppError("OTP not found", 400);
         }
 
         const isCodeValid = await bcrypt.compare(input.code, otpRecord.code);
         if (!isCodeValid || otpRecord.expires_at < new Date()) {
-            throw new Error("Invalid or expired OTP");
+            throw new AppError("Invalid or expired OTP", 400);
         }
         await db.delete(otp).where(eq(otp.email, input.email));
         await db.update(users).set({ is_verified: true }).where(eq(users.email, input.email));
@@ -240,7 +241,7 @@ export class AuthService {
         const { email, name, picture, sub } = googlePayload;
 
         if (!email) {
-            throw new Error("Email not provided from Google");
+            throw new AppError("Email not provided from Google", 400);
         }
 
         const [existingUser] = await db

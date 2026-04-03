@@ -3,6 +3,7 @@ import { end } from "pdfkit";
 import { db } from "../db/index.js";
 import { doctor_profile, consultation, practice_schedule, ratings, users } from "../db/schema.js";
 import { eq, and, desc, gte, is } from "drizzle-orm";
+import { AppError } from "../lib/errorHandler.js";
 
 interface consultationData {
     consulationSchedule: consultationScheduleResponse;
@@ -169,7 +170,7 @@ export class ConsultationService {
             .where(eq(doctor_profile.id, doctorId));
 
         if (!doctorData) {
-            throw new Error("Doctor not found");
+            throw new AppError("Doctor not found", 404);
         }
 
         const schedulesRaw = await db
@@ -345,7 +346,7 @@ export class ConsultationService {
         const consultationData = consultationDataArray.length > 0 ? consultationDataArray[0] : null;
 
         if (!consultationData) {
-            throw new Error("No upcoming consultation found");
+            throw new AppError("No upcoming consultation found", 404);
         }
 
         const normalizedPhone = consultationData.doctorPhone.replace(/^\+62/, "0").replace(/\D/g, "");
@@ -371,11 +372,11 @@ export class ConsultationService {
             .limit(1);
 
         if (!verifyConsultation!.isDone) {
-            throw new Error("Consultation is not completed yet");
+            throw new AppError("Consultation is not completed yet", 400);
         }
 
         if (verifyConsultation!.isDoneRating) {
-            throw new Error("You have already rated this consultation");
+            throw new AppError("You have already rated this consultation", 409);
         }
         
         const doctorId = verifyConsultation!.doctorId;
@@ -440,7 +441,7 @@ export class ConsultationService {
             const verifyConsultation = verifyConsultations.length > 0 ? verifyConsultations[0] : null;
             
             if (!verifyConsultation) {
-                throw new Error("Consultation not found");
+                throw new AppError("Consultation not found", 404);
             }
     
             const platformFee = Math.round(verifyConsultation.fee * 0.1);

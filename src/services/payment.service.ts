@@ -2,6 +2,7 @@ import { db } from "../db/index.js";
 import { doctor_profile, consultation, users, payment } from "../db/schema.js";
 import { eq, and } from "drizzle-orm";
 import { Invoice } from "../lib/xendit.js";
+import { AppError } from "../lib/errorHandler.js";
 
 interface xenditInvoiceResponse {
     invoiceId: string;
@@ -29,7 +30,7 @@ export class PaymentService {
             .limit(1);
 
         if (!verifyConsultation) {
-            throw new Error("Consultation not found");
+            throw new AppError("Consultation not found", 404);
         }
 
         const [userProfile] = await db
@@ -85,7 +86,7 @@ export class PaymentService {
                 amount: totalAmount,
             };
         } catch (error) {
-            throw new Error(`Failed to create Xendit invoice: ${error}`);
+            throw new AppError(`Failed to create Xendit invoice: ${error}`, 500);
         }
     }
 
@@ -94,7 +95,7 @@ export class PaymentService {
             const [invoice] = await Invoice.getInvoices({ lastInvoice: invoiceId });
             return invoice!.status;
         } catch (error) {
-            throw new Error(`Failed to check payment status: ${error}`);
+            throw new AppError(`Failed to check payment status: ${error}`, 500);
         }
     }
 
@@ -110,7 +111,7 @@ export class PaymentService {
                 .limit(1);
 
             if (!paymentRecord) {
-                throw new Error("Payment record not found");
+                throw new AppError("Payment record not found", 404);
             }
 
             await db
@@ -130,7 +131,7 @@ export class PaymentService {
 
             return true;
         } catch (error) {
-            throw new Error(`Failed to handle payment webhook: ${error}`);
+            throw new AppError(`Failed to handle payment webhook: ${error}`, 500);
         }
     }
 
