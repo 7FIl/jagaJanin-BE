@@ -11,6 +11,9 @@ interface dashboardData {
     avatarUrl?: string;
     trimester: number;
     weeks: number;
+    dailyProgress: dailyProgressResponse;
+    weeklyProgress: weeklyProgressResponse;
+    dailyRecommendation: mealRecommendation;
 }
 
 interface MealCategoryItem {
@@ -115,14 +118,19 @@ export class DashboardService {
     async getDashboardData(userId: string): Promise<dashboardData> {
 
         const avatar = await profileService.avatarUrl(userId);
-
         const weeks = await getPregnancyWeeks(userId);
         const trimester = calculateTrimester(weeks);
+        const dailyProgressData = await this.dailyProgress(userId);
+        const weeklyProgressData = await this.weeklyProgress(userId);
+        const dailyRecommendationData = await this.getMealRecommendations(userId);
         
         return {
             avatarUrl: avatar,
             trimester: trimester,
-            weeks: weeks
+            weeks: weeks,
+            dailyProgress: dailyProgressData,
+            weeklyProgress: weeklyProgressData,
+            dailyRecommendation: dailyRecommendationData,
         };
     }
 
