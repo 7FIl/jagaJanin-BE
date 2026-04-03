@@ -85,7 +85,6 @@ export class ConsultationController {
         const userId = request.user.sub;
         const { doctorId, date, startTime, endTime } = request.body;
 
-        // Parse time format HH.mm to Date objects for the specified date
         const [startHourStr, startMinuteStr] = startTime.split(".");
         const [endHourStr, endMinuteStr] = endTime.split(".");
 
@@ -94,7 +93,6 @@ export class ConsultationController {
         const endHour = parseInt(endHourStr || "0");
         const endMinute = parseInt(endMinuteStr || "0");
 
-        // Parse the date (YYYY-MM-DD)
         const consultationDate = new Date(date);
         consultationDate.setHours(0, 0, 0, 0);
 

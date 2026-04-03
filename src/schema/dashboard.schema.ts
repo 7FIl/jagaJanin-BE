@@ -124,45 +124,76 @@ export const createMealLogSchema = {
 export const getDashboardDataSchema = {
 	tags: ["Dashboard"],
 	summary: "Get dashboard overview data",
-	description: "Get overall dashboard data including nutrition, pregnancy progress, and recommendations",
+	description: "Get overall dashboard data including pregnancy progress, daily and weekly meal recommendations",
 	response: {
 		200: {
 			description: "Dashboard data retrieved successfully",
 			type: "object",
+			required: ["success", "data", "message"],
 			properties: {
 				success: { type: "boolean", description: "Operation success status" },
 				data: {
 					type: "object",
 					description: "Complete dashboard overview",
+					required: ["avatarUrl", "trimester", "weeks", "dailyProgress", "weeklyProgress", "dailyRecommendation"],
 					properties: {
-						pregnancyWeek: { type: "integer", description: "Current pregnancy week" },
-						dueDate: { type: "string", format: "date", description: "Expected due date" },
-						nutritionStatus: {
+						avatarUrl: { type: "string", format: "uri", description: "User avatar URL" },
+						trimester: { type: "string", description: "Current pregnancy trimester" },
+						weeks: { type: "integer", description: "Current pregnancy week" },
+						dailyProgress: {
 							type: "object",
-							description: "Nutrition compliance metrics",
+							description: "Daily meal progress",
 							properties: {
 								caloriesConsumed: { type: "number" },
 								caloriesTarget: { type: "number" },
 								compliancePercentage: { type: "number" }
 							}
 						},
-						recentMeals: {
-							type: "array",
-							description: "Recent meal logs",
-							items: {
-								type: "object",
-								properties: {
-									id: { type: "string" },
-									foodName: { type: "string" },
-									calories: { type: "number" },
-									date: { type: "string", format: "date" }
-								}
+						weeklyProgress: {
+							type: "object",
+							description: "Weekly meal progress",
+							properties: {
+								caloriesConsumed: { type: "number" },
+								caloriesTarget: { type: "number" },
+								compliancePercentage: { type: "number" }
 							}
 						},
-						recommendations: {
-							type: "array",
-							description: "Personalized health recommendations",
-							items: { type: "string" }
+						dailyRecommendation: {
+							type: "object",
+							description: "Daily meal recommendations",
+							properties: {
+								staple: {
+									type: "object",
+									properties: {
+										name: { type: "string" },
+										quantity: { type: "integer" },
+										gram: { type: "number" },
+										price: { type: "number" },
+										picture: { type: "string", format: "uri" }
+									}
+								},
+								side: {
+									type: "object",
+									properties: {
+										name: { type: "string" },
+										quantity: { type: "integer" },
+										gram: { type: "number" },
+										price: { type: "number" },
+										picture: { type: "string", format: "uri" }
+									}
+								},
+								vegetable: {
+									type: "object",
+									properties: {
+										name: { type: "string" },
+										quantity: { type: "integer" },
+										gram: { type: "number" },
+										price: { type: "number" },
+										picture: { type: "string", format: "uri" }
+									}
+								},
+								totalPrice: { type: "number" }
+							}
 						}
 					}
 				},

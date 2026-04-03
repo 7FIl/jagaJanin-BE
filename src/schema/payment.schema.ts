@@ -71,7 +71,8 @@ export const checkPaymentStatusSchema = {
                     type: "object",
                     description: "Payment status information",
                     properties: {
-                        status: { type: "string", enum: ["PAID", "PENDING", "EXPIRED"], description: "Current payment status" }
+                        status: { type: "string", enum: ["PAID", "PENDING", "EXPIRED"], description: "Current payment status" },
+                        consultationId: { type: "string", description: "Associated consultation ID" }
                     }
                 },
                 message: { type: "string", description: "Success message" }
@@ -102,11 +103,11 @@ export const handlePaymentWebhookSchema = {
     description: "Webhook endpoint for payment provider callbacks (Xendit). Processes payment confirmations and updates consultation status.",
     body: {
         type: "object",
-        required: ["id", "status", "externalId"],
+        required: ["id", "status", "external_id"],
         properties: {
             id: { type: "string", description: "Xendit callback event ID" },
-            status: { type: "string", enum: ["PAID", "PENDING", "EXPIRED", "EXPIRED_CONFIRMED"], description: "Payment status update" },
-            externalId: { type: "string", description: "External ID from Xendit (invoice ID)" },
+            status: { type: "string", description: "Payment status update" },
+            external_id: { type: "string", description: "External ID from Xendit (invoice ID)" },
             paidAmount: { type: "number", description: "Amount actually paid in IDR" },
             paymentMethod: { type: "string", description: "Payment method used (e.g., BANK_TRANSFER, CARD, E_WALLET)" },
             paidAt: { type: "string", format: "date-time", description: "Payment timestamp" }

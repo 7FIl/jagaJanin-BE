@@ -202,6 +202,17 @@ export class AuthService {
         const code = generateOtp();
         const hashCode = await bcrypt.hash(code, 10);
 
+        const isVerified = await db
+            .select()
+            .from(users)
+            .where(eq(users.email, email))
+            .limit(1)
+            .then(result => result[0]?.is_verified);
+        
+        if (isVerified) {
+            throw new AppError("Email is already verified", 400);
+        }
+
         await db.delete(otp).where(eq(otp.email, email));
 
         await db.insert(otp).values({

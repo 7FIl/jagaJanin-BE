@@ -47,7 +47,7 @@ export class ProfileService {
         let avatarUrl: string | undefined;
         if (user.avatar_url) {
             if (user.avatar_url.startsWith("http")) {
-                avatarUrl = user.avatar_url; // External URL from Google
+                avatarUrl = user.avatar_url;
             } else {
                 const { data } = supabase.storage.from("avatars").getPublicUrl(user.avatar_url);
                 avatarUrl = data.publicUrl;
@@ -80,13 +80,13 @@ export class ProfileService {
 
     }
 
-    async updateUserProfile(userId: string, fullName?: string, email?: string, password?: string): Promise<userProfileResponse> {
+    async updateUserProfile(userId: string, fullName?: string, email?: string, password?: string): Promise<{ fullName: string; email: string;}> {
             
         const [updatedUser] = await db
             .update(users)
             .set({ full_name: fullName, updated_at: new Date() })
             .where(eq(users.id, userId))
-            .returning({ fullName: users.full_name, email: users.email, phoneNumber: users.phone_number })
+            .returning({ fullName: users.full_name, email: users.email})
 
         if (!updatedUser) {
             throw new AppError("User not found", 404);
@@ -102,10 +102,10 @@ export class ProfileService {
 
         if (email !== undefined && password !== undefined) {
             const updatedEmail = await this.updateEmail(userId, email, password);
-            return { fullName: updatedUser.fullName, email: updatedEmail, phoneNumber: updatedUser.phoneNumber };
+            return { fullName: updatedUser.fullName, email: updatedEmail,};
         }
         
-        return { fullName: updatedUser.fullName, email: updatedUser.email, phoneNumber: updatedUser.phoneNumber };
+        return { fullName: updatedUser.fullName, email: updatedUser.email,};
     }
 
     async updatePhoneNumber(userId: string, phoneNumber: string): Promise<string> {
@@ -214,7 +214,7 @@ export class ProfileService {
         }
 
         if (user.avatar_url.startsWith("http")) {
-            return user.avatar_url; // External URL from Google
+            return user.avatar_url;
         }
 
         const { data } = supabase.storage.from("avatars").getPublicUrl(user.avatar_url);

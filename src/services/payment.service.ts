@@ -90,10 +90,10 @@ export class PaymentService {
         }
     }
 
-    async checkPaymentStatus(invoiceId: string): Promise<string> {
+    async checkPaymentStatus(invoiceId: string): Promise<{ status: string; consultationId: string }> {
         try {
             const [paymentRecord] = await db
-                .select({ status: payment.status })
+                .select({ status: payment.status, external_id: payment.external_id })
                 .from(payment)
                 .where(eq(payment.external_id, invoiceId))
                 .limit(1);
@@ -102,7 +102,13 @@ export class PaymentService {
                 throw new AppError("Invoice not found", 404);
             }
 
-            return paymentRecord.status;
+            // Extract consultationId from external_id format: "consultation-{consultationId}"
+            const consultationId = paymentRecord.external_id.replace("consultation-", "");
+
+            return {
+                status: paymentRecord.status,
+                consultationId: consultationId,
+            };
         } catch (error) {
             throw new AppError(`Failed to check payment status: ${error}`, 500);
         }
@@ -120,7 +126,8 @@ export class PaymentService {
                 .limit(1);
 
             if (!paymentRecord) {
-                throw new AppError("Payment record not found", 404);
+                console.error(`Payment not found for external_id: ${invoiceId}`);
+                throw new AppError(`Payment record not found for invoice ${invoiceId}`, 404);
             }
 
             await db

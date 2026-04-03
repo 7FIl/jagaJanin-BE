@@ -19,7 +19,7 @@ export const onboardingFormSchema = {
 			weeks: { type: "integer", minimum: 1, maximum: 45, description: "Current pregnancy weeks (1-45)" },
 			height: { type: "number", exclusiveMinimum: 0, description: "Height in centimeters" },
 			weight: { type: "number", exclusiveMinimum: 0, description: "Current weight in kilograms" },
-			age: { type: "integer", minimum: 10, maximum: 65, description: "User age in years" },
+			age: { type: "integer", minimum: 18, maximum: 65, description: "User age in years" },
 			mealPerDay: { type: "integer", minimum: 1, maximum: 12, description: "Preferred number of meals per day" },
 		},
 		additionalProperties: false

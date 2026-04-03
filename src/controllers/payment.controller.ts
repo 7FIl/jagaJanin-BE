@@ -1,20 +1,10 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { paymentService } from "../services/payment.service.js";
+import { ConsultationPaymentRequest, paymentService, PaymentWebhookRequest } from "../services/payment.service.js";
 import { AppError } from "../lib/errorHandler.js";
 import "dotenv/config";
 
-interface ConsultationPaymentRequest {
-    consultationId: string;
-}
-
-interface PaymentWebhookRequest {
-    id: string;
-    status: string;
-    externalId: string;
-}
 
 const XENDIT_WEBHOOK_SECRET = process.env.XENDIT_WEBHOOK_SECRET;
-
 
 export const validateXenditWebhookToken = async (
     request: FastifyRequest,
@@ -34,6 +24,7 @@ export const validateXenditWebhookToken = async (
         throw new AppError("Invalid webhook token", 403);
     }
 };
+
 
 export class PaymentController {
 
@@ -63,23 +54,22 @@ export class PaymentController {
     ) {
         const { invoiceId } = request.params;
 
-        const status = await paymentService.checkPaymentStatus(invoiceId);
+        const { status, consultationId } = await paymentService.checkPaymentStatus(invoiceId);
 
         return reply.status(200).send({
             success: true,
-            data: { status },
+            data: { status, consultationId },
             message: "Payment status retrieved successfully",
         });
     }
 
-    // Xendit webhook callback handler
     async handlePaymentWebhook(
         request: FastifyRequest<{ Body: PaymentWebhookRequest }>,
         reply: FastifyReply,
     ) {
-        const { id, status } = request.body;
+        const { external_id, status } = request.body;
 
-        await paymentService.handlePaymentWebhook(id, status);
+        await paymentService.handlePaymentWebhook(external_id, status);
 
         return reply.status(200).send({
             success: true,
@@ -87,7 +77,6 @@ export class PaymentController {
         });
     }
 
-    // Get payment history
     async getPaymentHistory(
         request: FastifyRequest,
         reply: FastifyReply,

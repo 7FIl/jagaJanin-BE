@@ -7,7 +7,7 @@ export async function paymentRoutes(fastify: FastifyInstance) {
     ( "/create", { schema: createPaymentSchema, onRequest: [fastify.authenticate] }, paymentController.createPayment );
     fastify.get<{ Params: { invoiceId: string } }>
     ( "/status/:invoiceId",{ schema: checkPaymentStatusSchema, onRequest: [fastify.authenticate] }, paymentController.checkPaymentStatus );
-    fastify.post<{ Body: { id: string; status: string; externalId: string } }>
+    fastify.post<{ Body: { id: string; status: string; external_id: string } }>
     ("/webhook",{ schema: handlePaymentWebhookSchema, onRequest: [validateXenditWebhookToken] }, paymentController.handlePaymentWebhook );
     fastify.get( "/history", { schema: getPaymentHistorySchema, onRequest: [fastify.authenticate] }, paymentController.getPaymentHistory );
 }

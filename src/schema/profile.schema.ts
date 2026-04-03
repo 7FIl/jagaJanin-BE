@@ -4,11 +4,11 @@ export const updateUserProfileSchema = {
     description: "Update user profile information including name, email, and phone number. Must provide password to change email.",
     body: {
         type: "object",
+        required: [],
         properties: {
             fullName: { type: "string", minLength: 2, description: "Full name of the user" },
             email: { type: "string", format: "email", description: "Email address (requires password)" },
             password: { type: "string", minLength: 6, description: "Current password (required if changing email)" },
-            phoneNumber: { type: "string", minLength: 10, maxLength: 20, description: "Phone number" }
         },
         additionalProperties: false,
         minProperties: 1
@@ -17,18 +17,16 @@ export const updateUserProfileSchema = {
         200: {
             description: "Profile updated successfully",
             type: "object",
+            required: ["success", "data", "message"],
             properties: {
                 success: { type: "boolean", description: "Operation success status" },
                 data: {
                     type: "object",
                     description: "Updated profile data",
+                    required: ["fullName", "email"],
                     properties: {
-                        id: { type: "string", description: "User ID" },
                         fullName: { type: "string", description: "Updated full name" },
                         email: { type: "string", description: "Updated email address" },
-                        phoneNumber: { type: "string", description: "Updated phone number" },
-                        role: { type: "string", description: "User role" },
-                        avatarUrl: { type: "string", description: "Avatar image URL" }
                     }
                 },
                 message: { type: "string", description: "Success message" }
@@ -40,6 +38,14 @@ export const updateUserProfileSchema = {
             properties: {
                 success: { type: "boolean" },
                 message: { type: "string", description: "Error message describing validation failure" }
+            }
+        },
+        401: {
+            description: "Unauthorized or incorrect password",
+            type: "object",
+            properties: {
+                success: { type: "boolean" },
+                message: { type: "string" }
             }
         },
         404: {

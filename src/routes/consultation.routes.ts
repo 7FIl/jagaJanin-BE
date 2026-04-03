@@ -15,7 +15,8 @@ export async function consultationRoutes(fastify: FastifyInstance) {
     ("/book",{ schema: bookConsultationSchema,onRequest: [fastify.authenticate]},consultationController.bookConsultation);
     fastify.post<{ Body: { consultationId: string; ratingValue: number } }>
     ("/rating",{ schema: giveRatingSchema,onRequest: [fastify.authenticate]},consultationController.giveRating);
-    fastify.get<{ Params: { consultationId: string } }>("/call/doctor/:consultationId",{ schema: callDoctorSchema, onRequest: [fastify.authenticate] },consultationController.callDoctor);
+    fastify.get<{ Params: { consultationId: string } }>
+    ("/call/doctor/:consultationId",{ schema: callDoctorSchema, onRequest: [fastify.authenticate] },consultationController.callDoctor);
     fastify.get<{ Params: { consultationId: string } }>
     ("/payment-confirmation/:consultationId",{ schema: getPaymentConfirmationSchema,onRequest: [fastify.authenticate] },consultationController.getPaymentConfirmation);
 }
