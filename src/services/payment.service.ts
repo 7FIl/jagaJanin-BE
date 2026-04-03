@@ -12,6 +12,17 @@ interface xenditInvoiceResponse {
     amount: number;
 }
 
+
+export interface ConsultationPaymentRequest {
+    consultationId: string;
+}
+
+export interface PaymentWebhookRequest {
+    id: string;
+    status: string;
+    external_id: string;
+}
+
 export class PaymentService {
     async createConsultationPayment(consultationId: string, userId: string): Promise<xenditInvoiceResponse> {
         const [verifyConsultation] = await db
@@ -102,7 +113,6 @@ export class PaymentService {
                 throw new AppError("Invoice not found", 404);
             }
 
-            // Extract consultationId from external_id format: "consultation-{consultationId}"
             const consultationId = paymentRecord.external_id.replace("consultation-", "");
 
             return {

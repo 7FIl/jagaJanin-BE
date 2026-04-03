@@ -1,5 +1,5 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { ConsultationPaymentRequest, paymentService, PaymentWebhookRequest } from "../services/payment.service.js";
+import { consultationPaymentRequest, paymentService, paymentWebhookRequest } from "../services/payment.service.js";
 import { AppError } from "../lib/errorHandler.js";
 import "dotenv/config";
 
@@ -29,7 +29,7 @@ export const validateXenditWebhookToken = async (
 export class PaymentController {
 
     async createPayment(
-        request: FastifyRequest<{ Body: ConsultationPaymentRequest }>,
+        request: FastifyRequest<{ Body: consultationPaymentRequest }>,
         reply: FastifyReply,
     ) {
         const { consultationId } = request.body;
@@ -64,7 +64,7 @@ export class PaymentController {
     }
 
     async handlePaymentWebhook(
-        request: FastifyRequest<{ Body: PaymentWebhookRequest }>,
+        request: FastifyRequest<{ Body: paymentWebhookRequest }>,
         reply: FastifyReply,
     ) {
         const { external_id, status } = request.body;
