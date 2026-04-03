@@ -17,6 +17,7 @@ interface consultationScheduleResponse {
 }
 
 interface doctorRecomendation {
+    id: string;
     name: string;
     specialty: string;
     experience: number;
@@ -52,7 +53,9 @@ interface consultationBookingResponse {
     id: string;
     doctorName: string;
     date: string;
-    time: string;
+    timeStart: string;
+    timeEnd: string;
+    
 }
 
 interface consultationBefore extends consultationBookingResponse {
@@ -125,6 +128,7 @@ export class ConsultationService {
 
         const allDoctors = await db
             .select({
+                id: doctor_profile.id,
                 name: users.full_name,
                 specialty: doctor_profile.specialization,
                 experience: doctor_profile.experience_years,
@@ -137,7 +141,6 @@ export class ConsultationService {
         const total = allDoctors.length;
         const totalPages = Math.ceil(total / limit);
         
-        // Paginate in memory
         const paginatedDoctors = allDoctors.slice(offset, offset + limit);
 
         return {
@@ -227,12 +230,15 @@ export class ConsultationService {
             // Ensure dates are Date objects
             const consTime = cons.startTime instanceof Date ? cons.startTime : new Date(cons.startTime as any);
             const constEndTime = cons.endTime instanceof Date ? cons.endTime : new Date(cons.endTime as any);
+            const timeStart = consTime.toISOString().split("T")[1]?.split(".")[0] || "";
+            const timeEnd = constEndTime.toISOString().split("T")[1]?.split(".")[0] || "";
             
             const baseData = {
                 id: cons.id,
                 doctorName: cons.doctorName || "Unknown Doctor",
                 date: consTime.toISOString().split("T")[0] || "",
-                time: consTime.toISOString().split("T")[1]?.split(".")[0] || "",
+                timeStart: timeStart,
+                timeEnd: timeEnd,
             };
             
             if (!cons.isDone && constEndTime < now) {
@@ -325,33 +331,47 @@ export class ConsultationService {
         };
     }
 
-    async callDoctor(userId: string): Promise<string> {
-            const consultationDataArray = await db
+    async callDoctor(userId: string, consultationId: string): Promise<string> {
+            const [consultationData] = await db
             .select({
                 doctorName: users.full_name,
                 doctorPhone: users.phone_number,
+                startTime: consultation.start_time,
+                endTime: consultation.end_time,
             })
             .from(consultation)
             .innerJoin(doctor_profile, eq(consultation.doctor_id, doctor_profile.id))
             .innerJoin(users, eq(doctor_profile.user_id, users.id))
             .where(and(
                 eq(consultation.is_paid, true),
-                eq(consultation.user_id, userId),
                 eq(consultation.is_done_rating, false),
-                gte(consultation.start_time, new Date())
+                eq(consultation.id, consultationId),
+                eq(consultation.user_id, userId),
             ))
-            .orderBy(desc(consultation.start_time))
             .limit(1);
 
-        const consultationData = consultationDataArray.length > 0 ? consultationDataArray[0] : null;
+            if ( new Date() > consultationData!.startTime) {
+                throw new AppError("Consultation time has not started yet", 400);
+            }
 
-        if (!consultationData) {
-            throw new AppError("No upcoming consultation found", 404);
-        }
+            if (consultationData!.endTime < new Date()) {
+                throw new AppError("Consultation time has already ended", 400);
+            }
 
-        const normalizedPhone = consultationData.doctorPhone.replace(/^\+62/, "0").replace(/\D/g, "");
+            const [user] = await db
+            .select({ fullName: users.full_name })
+            .from(users)
+            .where(eq(users.id, userId))
+            .limit(1)
 
-        const link = `https://wa.me/${normalizedPhone}?text=Halo%20Dokter%20${encodeURIComponent(consultationData.doctorName)},%20saya%20ingin%20konsultasi.`;
+        const phoneDigitsOnly = consultationData!.doctorPhone.replace(/\D/g, "");
+        const normalizedPhone = phoneDigitsOnly.startsWith("0") 
+            ? "62" + phoneDigitsOnly.slice(1)
+            : phoneDigitsOnly.startsWith("62")
+            ? phoneDigitsOnly 
+            : "62" + phoneDigitsOnly;
+
+        const link = `https://wa.me/${normalizedPhone}?text=Halo%20Dokter%20${encodeURIComponent(consultationData!.doctorName)},%20saya%20${encodeURIComponent(user!.fullName)}%20ingin%20konsultasi.`;
 
         return link;
     }
@@ -410,6 +430,11 @@ export class ConsultationService {
     }
 
     async bookConsultation(userId: string, doctorId: string, startTime: Date, endTime: Date): Promise<string> {
+        
+        if (startTime >= endTime) {
+            throw new AppError("End time must be after start time", 400);
+        }
+        
         const [result] = await db.insert(consultation).values({
             doctor_id: doctorId,
             user_id: userId,
@@ -421,7 +446,7 @@ export class ConsultationService {
         return consultationid;
     }
 
-    async getPaymentConfirmation(consultationId: string, userId: string): Promise<paymentConfirmationResponse> {
+    async getPaymentConfirmation( userId: string, consultationId: string): Promise<paymentConfirmationResponse> {
             const verifyConsultations = await db
                 .select({
                     doctorName: users.full_name,

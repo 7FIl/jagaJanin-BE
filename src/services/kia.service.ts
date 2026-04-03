@@ -561,26 +561,30 @@ export class kiaService {
             .where(eq(checklist.kia_id, kiaData.id))
             .limit(1);
 
+        // Convert boolean to Yes/No for better readability
+        const boolToYesNo = (value: boolean): string => value ? "Yes" : "No";
+
         const flattenedData = allCheckups.map((check) => ({
-            checkup_date: check.checkup_date,
-            facility_name: check.facility_name,
-            doctor_name: check.doctor_name,
-            blood_pressure: check.blood_pressure,
-            weight: check.weight,
-            height: check.height,
-            fundal_height: check.fundal_height,
-            lila: check.lila,
-            hemoglobin: check.hemoglobin,
-            blood_type: check.blood_type,
-            blood_sugar: check.blood_sugar,
-            urine_protein: check.urine_protein,
-            fetal_heartbeat: checklistData?.fetal_heartbeat || false,
-            counseling: checklistData?.counseling || false,
-            tetanus_immunization: checklistData?.tetanus_immunization || false,
-            health_screening: checklistData?.health_screening || false,
-            iron_supplement: checklistData?.iron_supplement || false,
-            ppia: checklistData?.ppia || false,
-            checklist_completed: checklistData?.is_completed || false,
+            checkup_date: check.checkup_date ? new Date(check.checkup_date).toLocaleDateString() : "-",
+            facility_name: check.facility_name || "-",
+            doctor_name: check.doctor_name || "-",
+            blood_pressure: check.blood_pressure || "-",
+            weight_kg: check.weight ? Number(check.weight) : "-",
+            height_cm: check.height ? Number(check.height) : "-",
+            fundal_height_cm: check.fundal_height ? Number(check.fundal_height) : "-",
+            lila_mm: check.lila || "-",
+            imt: check.weight && check.height ? (Number(check.weight) / (Number(check.height) ** 2)).toFixed(2) : "-",
+            hemoglobin_gdl: check.hemoglobin || "-",
+            blood_type: check.blood_type || "-",
+            blood_sugar_mgdl: check.blood_sugar || "-",
+            urine_protein: check.urine_protein || "-",
+            fetal_heartbeat: boolToYesNo(checklistData?.fetal_heartbeat || false),
+            counseling: boolToYesNo(checklistData?.counseling || false),
+            tetanus_immunization: boolToYesNo(checklistData?.tetanus_immunization || false),
+            health_screening: boolToYesNo(checklistData?.health_screening || false),
+            iron_supplement: boolToYesNo(checklistData?.iron_supplement || false),
+            ppia: boolToYesNo(checklistData?.ppia || false),
+            checklist_completed: boolToYesNo(checklistData?.is_completed || false),
         }));
 
         const csvData = stringify(flattenedData, {
@@ -589,26 +593,50 @@ export class kiaService {
                 checkup_date: "Checkup Date",
                 facility_name: "Facility Name",
                 doctor_name: "Doctor Name",
-                blood_pressure: "Blood Pressure",
-                weight: "Weight (kg)",
-                height: "Height (cm)",
-                fundal_height: "Fundal Height (cm)",
-                lila: "LILA (mm)",
-                hemoglobin: "Hemoglobin (g/dL)",
+                blood_pressure: "Blood Pressure (mmHg)",
+                weight_kg: "Weight (kg)",
+                height_cm: "Height (cm)",
+                fundal_height_cm: "Fundal Height (cm)",
+                lila_mm: "LILA (mm)",
+                imt: "BMI (IMT)",
+                hemoglobin_gdl: "Hemoglobin (g/dL)",
                 blood_type: "Blood Type",
-                blood_sugar: "Blood Sugar (mg/dL)",
+                blood_sugar_mgdl: "Blood Sugar (mg/dL)",
                 urine_protein: "Urine Protein",
-                fetal_heartbeat: "Fetal Heartbeat",
-                counseling: "Counseling",
+                fetal_heartbeat: "Fetal Heartbeat Checked",
+                counseling: "Counseling Provided",
                 tetanus_immunization: "Tetanus Immunization",
                 health_screening: "Health Screening",
-                iron_supplementation: "Iron Supplementation",
-                ppia: "PPIA",
-                checklist_completed: "Checklist Completed",
+                iron_supplement: "Iron Supplement",
+                ppia: "PPIA Services",
+                checklist_completed: "All Services Completed",
             },
         });
 
         return csvData;
+    }
+
+    private drawSectionHeader(doc: any, title: string, y?: number): number {
+        const headerY = y || doc.y;
+        const pageWidth = doc.page.width;
+        const margin = 50;
+        const contentWidth = pageWidth - 2 * margin;
+        
+        // Draw line above
+        doc.strokeColor('#1e3a8a').lineWidth(0.5);
+        doc.moveTo(margin, headerY).lineTo(pageWidth - margin, headerY).stroke();
+        
+        // Draw title with background
+        doc.fillColor('#1e3a8a').fontSize(13).font('Helvetica-Bold');
+        doc.text(title, margin + 10, headerY + 8, { width: contentWidth - 20 });
+        
+        // Draw line below
+        doc.strokeColor('#1e3a8a').lineWidth(0.5);
+        doc.moveTo(margin, headerY + 28).lineTo(pageWidth - margin, headerY + 28).stroke();
+        
+        doc.fillColor('#000000');
+        
+        return headerY + 38;
     }
 
     async getPdfReport(userId: string): Promise<Buffer> {
@@ -629,106 +657,295 @@ export class kiaService {
             .where(eq(checklist.kia_id, kiaData.id))
             .limit(1);
 
-        // Create PDF document
         const doc = new PDFDocument({
-            bufferPages: true
+            bufferPages: true,
+            size: 'A4'
         });
 
         const chunks: Buffer[] = [];
         doc.on('data', (chunk) => chunks.push(chunk));
 
-        // Document title and header
-        doc.fontSize(20).font('Helvetica-Bold').text('KIA Health Report', { align: 'center' });
-        doc.moveDown(0.5);
-        doc.fontSize(12).font('Helvetica').text(`Generated: ${new Date().toLocaleDateString()}`, { align: 'center' });
+        const pageWidth = doc.page.width;
+        const margin = 50;
+        const contentWidth = pageWidth - 2 * margin;
+
+        // ============ PROFESSIONAL HEADER ============
+        doc.fillColor('#1e3a8a').rect(0, 0, pageWidth, 100).fill();
+        doc.fillColor('#ffffff').fontSize(24).font('Helvetica-Bold');
+        doc.text('MATERNAL HEALTH CARE REPORT', margin, 20, { width: contentWidth, align: 'center' });
+        
+        doc.fillColor('#e0e7ff').fontSize(10).font('Helvetica');
+        doc.text('KIA (Kartu Ibu Hamil) - Comprehensive Pregnancy Health Record', margin, 50, { width: contentWidth, align: 'center' });
+        
+        const reportDate = new Date();
+        doc.fillColor('#bfdbfe').fontSize(9).font('Helvetica');
+        doc.text(`Generated: ${reportDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} at ${reportDate.toLocaleTimeString()}`, margin, 68, { width: contentWidth, align: 'center' });
+        
+        doc.moveDown(4);
+
+        // ============ PREGNANCY INFORMATION SECTION ============
+        let currentY = this.drawSectionHeader(doc, 'PREGNANCY INFORMATION');
+        doc.y = currentY;
+
+        const weeks = await getPregnancyWeeks(userId);
+        const hpl = new Date(kiaData.hpl);
+        const today = new Date();
+        const daysUntilDelivery = Math.ceil((hpl.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        const trimester = calculateTrimester(weeks);
+
+        // Left column info boxes
+        doc.fontSize(11).font('Helvetica-Bold').fillColor('#1e3a8a');
+        doc.text('Gestational Age', margin, doc.y);
+        doc.fontSize(14).font('Helvetica-Bold').fillColor('#22c55e');
+        doc.text(`${weeks} weeks`, margin + 120, doc.y - 16);
+        
+        doc.fontSize(11).font('Helvetica-Bold').fillColor('#1e3a8a');
+        doc.text('Trimester', margin, doc.y + 20);
+        doc.fontSize(14).font('Helvetica-Bold').fillColor('#22c55e');
+        doc.text(`Trimester ${trimester}`, margin + 120, doc.y - 16);
+        
+        doc.fontSize(11).font('Helvetica-Bold').fillColor('#1e3a8a');
+        doc.text('HPHT (First Day of LMP)', margin, doc.y + 20);
+        doc.fontSize(11).font('Helvetica').fillColor('#000000');
+        doc.text(new Date(kiaData.hpht).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }), margin + 120, doc.y - 16);
+        
+        // Right column info boxes
+        doc.fontSize(11).font('Helvetica-Bold').fillColor('#1e3a8a');
+        doc.text('Expected Delivery Date (EDD)', margin + 250, doc.y - 60);
+        doc.fontSize(14).font('Helvetica-Bold').fillColor('#f59e0b');
+        doc.text(hpl.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }), margin + 250, doc.y - 16);
+        
+        doc.fontSize(11).font('Helvetica-Bold').fillColor('#1e3a8a');
+        doc.text('Days Until Delivery', margin + 250, doc.y + 20);
+        doc.fontSize(14).font('Helvetica-Bold').fillColor('#f59e0b');
+        doc.text(`${Math.max(0, daysUntilDelivery)} days`, margin + 250, doc.y - 16);
+
+        doc.moveDown(3.5);
+
+        // ============ CARE SERVICES CHECKLIST ============
+        currentY = this.drawSectionHeader(doc, 'CARE SERVICES CHECKLIST');
+        doc.y = currentY;
+
+        const checklistItems = [
+            { name: 'Fetal Heartbeat Monitoring', completed: checklistData?.fetal_heartbeat || false },
+            { name: 'Health Counseling', completed: checklistData?.counseling || false },
+            { name: 'Tetanus Immunization', completed: checklistData?.tetanus_immunization || false },
+            { name: 'Health Screening', completed: checklistData?.health_screening || false },
+            { name: 'Iron Supplementation', completed: checklistData?.iron_supplement || false },
+            { name: 'PPIA Services', completed: checklistData?.ppia || false },
+        ];
+
+        const completedCount = checklistItems.filter(item => item.completed).length;
+        const totalCount = checklistItems.length;
+
+        checklistItems.forEach((item, index) => {
+            const checkboxX = margin;
+            const checkboxY = doc.y;
+            const checkboxSize = 12;
+
+            if (item.completed) {
+                doc.fillColor('#22c55e').rect(checkboxX, checkboxY, checkboxSize, checkboxSize).fill();
+                doc.fillColor('#ffffff').fontSize(10).font('Helvetica-Bold');
+                doc.text('✓', checkboxX + 2, checkboxY + 1);
+            } else {
+                doc.strokeColor('#d1d5db').lineWidth(1.5).rect(checkboxX, checkboxY, checkboxSize, checkboxSize).stroke();
+            }
+
+            doc.fillColor('#000000').fontSize(11).font('Helvetica');
+            doc.text(item.name, checkboxX + 20, checkboxY + 1);
+
+            if ((index + 1) % 2 === 0) {
+                doc.moveDown(1.5);
+            }
+        });
+
+        // Status bar
         doc.moveDown(1);
+        const statusBarY = doc.y;
+        const barWidth = contentWidth;
+        const barHeight = 15;
+        
+        doc.strokeColor('#d1d5db').lineWidth(1).rect(margin, statusBarY, barWidth, barHeight).stroke();
+        const filledWidth = (completedCount / totalCount) * barWidth;
+        doc.fillColor('#22c55e').rect(margin, statusBarY, filledWidth, barHeight).fill();
+        
+        doc.fillColor('#000000').fontSize(10).font('Helvetica-Bold');
+        doc.text(`Progress: ${completedCount}/${totalCount} services completed`, margin + 10, statusBarY + 2);
 
-        // Summary Section
-        doc.fontSize(14).font('Helvetica-Bold').text('Pregnancy Summary');
-        doc.moveDown(0.3);
-        doc.fontSize(11).font('Helvetica');
-        doc.text(`Weeks: ${kiaData.trimester ? `Trimester ${kiaData.trimester}` : 'N/A'}`);
-        doc.text(`HPL (Estimated Due Date): ${kiaData.hpl ? new Date(kiaData.hpl).toLocaleDateString() : 'N/A'}`);
-        doc.text(`HPHT (First Day Last Menstruation): ${kiaData.hpht ? new Date(kiaData.hpht).toLocaleDateString() : 'N/A'}`);
-        doc.moveDown(0.5);
+        doc.moveDown(2);
 
-        // Checklist Section
-        doc.fontSize(14).font('Helvetica-Bold').text('Health Checklist');
-        doc.moveDown(0.3);
-        if (checklistData) {
-            const checklistItems = [];
-            if (checklistData.fetal_heartbeat) checklistItems.push('✓ Fetal Heartbeat');
-            if (checklistData.counseling) checklistItems.push('✓ Counseling');
-            if (checklistData.tetanus_immunization) checklistItems.push('✓ Tetanus Immunization');
-            if (checklistData.health_screening) checklistItems.push('✓ Health Screening');
-            if (checklistData.iron_supplement) checklistItems.push('✓ Iron Supplement');
-            if (checklistData.ppia) checklistItems.push('✓ PPIA');
-            
-            doc.fontSize(11).font('Helvetica');
-            checklistItems.forEach(item => doc.text(item));
-            doc.text(`Status: ${checklistData.is_completed ? 'Completed' : 'In Progress'}`);
-        }
-        doc.moveDown(1);
+        // ============ CHECKUP HISTORY TABLE ============
+        currentY = this.drawSectionHeader(doc, 'CHECKUP HISTORY');
+        doc.y = currentY;
 
-        // Checkups Section
-        doc.fontSize(14).font('Helvetica-Bold').text('Checkup Records');
-        doc.moveDown(0.5);
+        const tableStartY = doc.y;
+        const col1Width = 90;  // Date
+        const col2Width = 85;  // Facility
+        const col3Width = 75;  // Doctor
+        const col4Width = 70;  // BP
+        const col5Width = 60;  // Weight
+        const col6Width = 60;  // Height
+        const col7Width = 75;  // Fundal Height
+
+        const columns = [
+            { header: 'Date', width: col1Width, x: margin },
+            { header: 'Facility', width: col2Width, x: margin + col1Width },
+            { header: 'Doctor', width: col3Width, x: margin + col1Width + col2Width },
+            { header: 'Blood Pressure', width: col4Width, x: margin + col1Width + col2Width + col3Width },
+            { header: 'Weight (kg)', width: col5Width, x: margin + col1Width + col2Width + col3Width + col4Width },
+            { header: 'Height (cm)', width: col6Width, x: margin + col1Width + col2Width + col3Width + col4Width + col5Width },
+            { header: 'Fundal Ht (cm)', width: col7Width, x: margin + col1Width + col2Width + col3Width + col4Width + col5Width + col6Width },
+        ];
 
         // Table header
-        const startX = 50;
-        const col1X = startX;
-        const col2X = startX + 100;
-        const col3X = startX + 200;
-        const col4X = startX + 280;
-        const col5X = startX + 360;
-        const rowHeight = 20;
-        const headerY = doc.y;
+        doc.fillColor('#1e3a8a').fontSize(9).font('Helvetica-Bold');
+        const headerRowHeight = 20;
+        columns.forEach((col) => {
+            doc.text(col.header, col.x, doc.y, { width: col.width, align: 'center' });
+        });
+        doc.moveDown(1.2);
 
-        doc.fontSize(10).font('Helvetica-Bold');
-        doc.text('Date', col1X, headerY);
-        doc.text('Facility', col2X, headerY);
-        doc.text('Doctor', col3X, headerY);
-        doc.text('Weight', col4X, headerY);
-        doc.text('BP', col5X, headerY);
+        // Draw header underline
+        doc.strokeColor('#1e3a8a').lineWidth(1.5);
+        doc.moveTo(margin, doc.y).lineTo(margin + contentWidth, doc.y).stroke();
+        doc.moveDown(0.3);
 
-        doc.moveTo(startX, headerY + 15).lineTo(550, headerY + 15).stroke();
-        doc.moveDown(1);
+        // Table rows with alternating colors
+        doc.fillColor('#000000').fontSize(9).font('Helvetica');
+        allCheckups.forEach((check, index) => {
+            const rowY = doc.y;
+            const rowHeight = 18;
+            const isAlternate = index % 2 === 0;
+            
+            // Alternate row background
+            if (isAlternate) {
+                doc.fillColor('#f3f4f6').rect(margin - 5, rowY - 2, contentWidth + 10, rowHeight).fill();
+            }
 
-        // Table rows
-        doc.fontSize(9).font('Helvetica');
-        allCheckups.forEach((check) => {
-            const currentY = doc.y;
-            const dateFmt = check.checkup_date ? new Date(check.checkup_date).toLocaleDateString() : 'N/A';
-            const weight = check.weight ? `${check.weight} kg` : 'N/A';
-            const bp = check.blood_pressure || 'N/A';
-
-            doc.text(dateFmt, col1X, currentY, { width: 90 });
-            doc.text(check.facility_name || '-', col2X, currentY, { width: 90 });
-            doc.text(check.doctor_name || '-', col3X, currentY, { width: 70 });
-            doc.text(weight, col4X, currentY, { width: 70 });
-            doc.text(bp, col5X, currentY, { width: 50 });
+            doc.fillColor('#000000');
+            const dateFmt = check.checkup_date ? new Date(check.checkup_date).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: '2-digit' }) : '-';
+            doc.text(dateFmt, columns[0]!.x, rowY, { width: columns[0]!.width, align: 'center' });
+            doc.text(check.facility_name || '-', columns[1]!.x, rowY, { width: columns[1]!.width, align: 'center' });
+            doc.text(check.doctor_name || '-', columns[2]!.x, rowY, { width: columns[2]!.width, align: 'center' });
+            doc.text(check.blood_pressure || '-', columns[3]!.x, rowY, { width: columns[3]!.width, align: 'center' });
+            doc.text(check.weight ? check.weight.toString() : '-', columns[4]!.x, rowY, { width: columns[4]!.width, align: 'center' });
+            doc.text(check.height ? check.height.toString() : '-', columns[5]!.x, rowY, { width: columns[5]!.width, align: 'center' });
+            doc.text(check.fundal_height ? check.fundal_height.toString() : '-', columns[6]!.x, rowY, { width: columns[6]!.width, align: 'center' });
 
             doc.moveDown(1);
         });
 
         doc.moveDown(0.5);
 
-        // Lab Results Section
-        doc.fontSize(14).font('Helvetica-Bold').text('Latest Lab Results');
-        doc.moveDown(0.3);
-        if (allCheckups.length > 0) {
-            const latestCheckup = allCheckups[0];
-            doc.fontSize(11).font('Helvetica');
-            doc.text(`Hemoglobin: ${latestCheckup!.hemoglobin} g/dL`);
-            doc.text(`Blood Type: ${latestCheckup!.blood_type}`);
-            doc.text(`Blood Sugar: ${latestCheckup!.blood_sugar} mg/dL`);
-            doc.text(`Urine Protein: ${latestCheckup!.urine_protein}`);
-            doc.text(`Fundal Height: ${latestCheckup!.fundal_height} cm`);
-            doc.text(`LILA: ${latestCheckup!.lila} mm`);
+        // Get the latest checkup
+        const latestCheckup = allCheckups.reduce((latest, current) => {
+            const latestDate = new Date(latest.checkup_date).getTime();
+            const currentDate = new Date(current.checkup_date).getTime();
+            return currentDate > latestDate ? current : latest;
+        });
+
+        // ============ LATEST LABORATORY RESULTS ============
+        currentY = this.drawSectionHeader(doc, 'LATEST LABORATORY RESULTS');
+        doc.y = currentY;
+
+        if (latestCheckup) {
+            const labData = [
+                { label: 'Hemoglobin', value: latestCheckup.hemoglobin || '-', unit: 'g/dL', normal: '11.0 - 16.0' },
+                { label: 'Blood Type', value: latestCheckup.blood_type || '-', unit: '', normal: 'Any' },
+                { label: 'Blood Sugar', value: latestCheckup.blood_sugar || '-', unit: 'mg/dL', normal: '< 140' },
+                { label: 'Urine Protein', value: latestCheckup.urine_protein ? (latestCheckup.urine_protein === '1' ? 'Negative' : 'Positive') : '-', unit: '', normal: 'Negative' },
+            ];
+
+            const boxWidth = (contentWidth - 10) / 2;
+            let boxIndex = 0;
+
+            labData.forEach((lab, index) => {
+                const colIndex = index % 2;
+                const rowIndex = Math.floor(index / 2);
+                const boxX = margin + (colIndex * (boxWidth + 10));
+                const boxY = doc.y + (rowIndex * 65);
+
+                // Draw box
+                doc.strokeColor('#e5e7eb').lineWidth(1).rect(boxX, boxY, boxWidth, 60).stroke();
+
+                // Background
+                doc.fillColor('#f9fafb').rect(boxX + 1, boxY + 1, boxWidth - 2, 58).fill();
+
+                // Label
+                doc.fillColor('#1e3a8a').fontSize(10).font('Helvetica-Bold');
+                doc.text(lab.label, boxX + 10, boxY + 8, { width: boxWidth - 20 });
+
+                // Value
+                doc.fillColor('#22c55e').fontSize(14).font('Helvetica-Bold');
+                doc.text(lab.value.toString(), boxX + 10, boxY + 25, { width: boxWidth - 20 });
+
+                // Unit
+                doc.fillColor('#6b7280').fontSize(9).font('Helvetica');
+                if (lab.unit) {
+                    doc.text(lab.unit, boxX + 10, boxY + 42);
+                }
+
+                // Normal range
+                doc.fillColor('#9ca3af').fontSize(8).font('Helvetica');
+                doc.text(`Normal: ${lab.normal}`, boxX + 10, boxY + 48, { width: boxWidth - 20 });
+            });
+
+            doc.moveDown(3.5);
         }
 
+        // ============ LATEST PHYSICAL MEASUREMENTS ============
+        currentY = this.drawSectionHeader(doc, 'LATEST PHYSICAL MEASUREMENTS');
+        doc.y = currentY;
+
+        const physicalData = [
+            { label: 'Weight', value: latestCheckup?.weight || '-', unit: 'kg' },
+            { label: 'Height', value: latestCheckup?.height || '-', unit: 'cm' },
+            { label: 'Fundal Height', value: latestCheckup?.fundal_height || '-', unit: 'cm' },
+            { label: 'LILA', value: latestCheckup?.lila || '-', unit: 'mm' },
+        ];
+
+        const measBoxWidth = (contentWidth - 10) / 2;
+
+        physicalData.forEach((measurement, index) => {
+            const colIndex = index % 2;
+            const rowIndex = Math.floor(index / 2);
+            const measX = margin + (colIndex * (measBoxWidth + 10));
+            const measY = doc.y + (rowIndex * 55);
+
+            // Draw measurement box
+            doc.strokeColor('#d1d5db').lineWidth(1).rect(measX, measY, measBoxWidth, 50).stroke();
+            doc.fillColor('#f3f4f6').rect(measX + 1, measY + 1, measBoxWidth - 2, 48).fill();
+
+            // Label
+            doc.fillColor('#1e3a8a').fontSize(11).font('Helvetica-Bold');
+            doc.text(measurement.label, measX + 12, measY + 12, { width: measBoxWidth - 24 });
+
+            // Value with unit
+            doc.fillColor('#f59e0b').fontSize(16).font('Helvetica-Bold');
+            const displayValue = measurement.unit ? `${measurement.value} ${measurement.unit}` : measurement.value.toString();
+            doc.text(displayValue, measX + 12, measY + 28, { width: measBoxWidth - 24 });
+        });
+
+        doc.moveDown(3);
+
+        // ============ PROFESSIONAL FOOTER ============
         doc.moveDown(1);
-        doc.fontSize(10).font('Helvetica').text('This report is generated for medical reference purposes only.', { align: 'center' });
+        doc.strokeColor('#d1d5db').lineWidth(1);
+        doc.moveTo(margin, doc.y).lineTo(margin + contentWidth, doc.y).stroke();
+        
+        doc.moveDown(0.5);
+        doc.fillColor('#6b7280').fontSize(8).font('Helvetica');
+        doc.text('CONFIDENTIALITY NOTICE: This document contains confidential and privileged medical information. Unauthorized disclosure is strictly prohibited and may result in legal action.', margin, doc.y, { width: contentWidth, align: 'left' });
+
+        doc.moveDown(1.5);
+        
+        // Signature lines
+        doc.fontSize(9).font('Helvetica');
+        doc.text('Healthcare Provider Signature', margin, doc.y);
+        doc.text('Date', margin + 250, doc.y - 16);
+        
+        doc.moveTo(margin, doc.y + 15).lineTo(margin + 180, doc.y + 15).stroke();
+        doc.moveTo(margin + 250, doc.y).lineTo(margin + 380, doc.y).stroke();
 
         doc.end();
 

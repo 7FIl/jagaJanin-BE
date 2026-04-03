@@ -11,7 +11,7 @@ export const createPaymentSchema = {
         additionalProperties: false
     },
     response: {
-        200: {
+        201: {
             description: "Payment invoice created successfully",
             type: "object",
             properties: {
@@ -23,9 +23,8 @@ export const createPaymentSchema = {
                         invoiceId: { type: "string", description: "Xendit invoice ID" },
                         invoiceUrl: { type: "string", description: "Payment URL (direct to payment gateway)" },
                         amount: { type: "number", description: "Total amount including platform fee in IDR" },
-                        currency: { type: "string", enum: ["IDR"], description: "Currency code" },
                         expiryDate: { type: "string", format: "date-time", description: "Invoice expiration timestamp" },
-                        status: { type: "string", enum: ["PENDING"], description: "Invoice status" }
+                        status: { type: "string", description: "Invoice status" }
                     }
                 },
                 message: { type: "string", description: "Success message" }
@@ -174,16 +173,9 @@ export const getPaymentHistorySchema = {
                         type: "object",
                         properties: {
                             id: { type: "string", description: "Payment record unique identifier" },
-                            invoiceId: { type: "string", description: "Xendit invoice ID" },
-                            invoiceUrl: { type: "string", format: "uri", description: "Xendit payment page URL" },
-                            consultationId: { type: "string", description: "Associated consultation ID" },
                             amount: { type: "number", description: "Transaction amount in IDR" },
-                            currency: { type: "string", enum: ["IDR"], description: "Currency code" },
-                            status: { type: "string", enum: ["PAID", "PENDING", "EXPIRED"], description: "Payment status" },
-                            paymentMethod: { type: "string", description: "Method used to pay (e.g., BANK_TRANSFER, CARD)" },
-                            createdAt: { type: "string", format: "date-time", description: "Payment creation timestamp" },
-                            paidAt: { type: "string", format: "date-time", description: "Actual payment timestamp (null if unpaid/expired)" },
-                            expiryDate: { type: "string", format: "date-time", description: "Invoice expiration time" }
+                            status: { type: "string", description: "Payment status (pending, paid, expired)" },
+                            createdAt: { type: "string", format: "date-time", description: "Payment creation timestamp" }
                         }
                     }
                 },

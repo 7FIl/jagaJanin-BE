@@ -1,3 +1,5 @@
+import { end } from "pdfkit";
+
 export const getDoctorRecommendationsSchema = {
     tags: ["Consultation"],
     summary: "Get recommended doctors",
@@ -26,6 +28,7 @@ export const getDoctorRecommendationsSchema = {
                             items: {
                                 type: "object",
                                 properties: {
+                                    id: { type: "string", description: "Doctor profile unique identifier" },
                                     name: { type: "string", description: "Doctor full name" },
                                     specialty: { type: "string", description: "Medical specialty" },
                                     experience: { type: "integer", description: "Years of experience" },
@@ -164,7 +167,8 @@ export const getConsultationHistorySchema = {
                                             id: { type: "string", description: "Consultation unique identifier" },
                                             doctorName: { type: "string", description: "Doctor full name" },
                                             date: { type: "string", format: "date", description: "Consultation date" },
-                                            time: { type: "string", description: "Consultation start time" },
+                                            timeStart: { type: "string", description: "Consultation start time" },
+                                            timeEnd: { type: "string", description: "Consultation end time" },
                                             isDone: { type: "boolean", description: "Consultation status" },
                                             isDoneRating: { type: "boolean", description: "Whether user has rated this consultation" }
                                         }
@@ -195,7 +199,8 @@ export const getConsultationHistorySchema = {
                                             id: { type: "string", description: "Consultation unique identifier" },
                                             doctorName: { type: "string", description: "Doctor full name" },
                                             date: { type: "string", format: "date", description: "Consultation date" },
-                                            time: { type: "string", description: "Consultation start time" },
+                                            startTime: { type: "string", description: "Consultation start time" },
+                                            endTime: { type: "string", description: "Consultation end time" },
                                             isTimeToConsult: { type: "boolean", description: "Whether it's time to start the consultation" }
                                         }
                                     }
@@ -309,11 +314,12 @@ export const bookConsultationSchema = {
     description: "Schedule a new consultation with a doctor at a specific time",
     body: {
         type: "object",
-        required: ["doctorId", "startTime", "endTime"],
+        required: ["doctorId", "date", "startTime", "endTime"],
         properties: {
             doctorId: { type: "string", description: "Doctor unique identifier" },
-            startTime: { type: "string", format: "date-time", description: "Consultation start time (ISO 8601 format)" },
-            endTime: { type: "string", format: "date-time", description: "Consultation end time (ISO 8601 format)" }
+            date: { type: "string", format: "date", description: "Consultation date (YYYY-MM-DD)" },
+            startTime: { type: "string", pattern: "^([0-1][0-9]|2[0-3])\\.[0-5][0-9]$", description: "Consultation start time in HH.mm format (e.g., 18.00)" },
+            endTime: { type: "string", pattern: "^([0-1][0-9]|2[0-3])\\.[0-5][0-9]$", description: "Consultation end time in HH.mm format (e.g., 19.00)" }
         },
         additionalProperties: false
     },
@@ -472,15 +478,25 @@ export const callDoctorSchema = {
     tags: ["Consultation"],
     summary: "Call doctor for consultation",
     description: "Initiate a consultation call with doctor via WhatsApp (must have active scheduled consultation)",
+    params: {
+        type: "object",
+        required: ["consultationId"],
+        properties: {
+            consultationId: { type: "string", description: "Consultation unique identifier" }
+        },
+        additionalProperties: false
+    },
     response: {
         200: {
             description: "Consultation call link retrieved successfully",
             type: "object",
+            required: ["success", "data", "message"],
             properties: {
                 success: { type: "boolean", description: "Operation success status" },
                 data: {
                     type: "object",
                     description: "Call link details",
+                    required: ["link"],
                     properties: {
                         link: { type: "string", format: "uri", description: "WhatsApp call link" }
                     }

@@ -4,6 +4,7 @@ import { AppError } from "../lib/errorHandler.js";
 
 interface BookConsultationInput {
     doctorId: string;
+    date: string;
     startTime: string;
     endTime: string;
 }
@@ -82,13 +83,32 @@ export class ConsultationController {
         reply: FastifyReply,
     ) {
         const userId = request.user.sub;
-        const { doctorId, startTime, endTime } = request.body;
+        const { doctorId, date, startTime, endTime } = request.body;
+
+        // Parse time format HH.mm to Date objects for the specified date
+        const [startHourStr, startMinuteStr] = startTime.split(".");
+        const [endHourStr, endMinuteStr] = endTime.split(".");
+
+        const startHour = parseInt(startHourStr || "0");
+        const startMinute = parseInt(startMinuteStr || "0");
+        const endHour = parseInt(endHourStr || "0");
+        const endMinute = parseInt(endMinuteStr || "0");
+
+        // Parse the date (YYYY-MM-DD)
+        const consultationDate = new Date(date);
+        consultationDate.setHours(0, 0, 0, 0);
+
+        const startDateTime = new Date(consultationDate);
+        startDateTime.setHours(startHour, startMinute);
+
+        const endDateTime = new Date(consultationDate);
+        endDateTime.setHours(endHour, endMinute);
 
         const consultationId = await consultationService.bookConsultation(
             userId,
             doctorId,
-            new Date(startTime),
-            new Date(endTime)
+            startDateTime,
+            endDateTime
         );
 
         return reply.status(201).send({
@@ -118,11 +138,13 @@ export class ConsultationController {
     }
 
     async callDoctor(
-        request: FastifyRequest,
+        request: FastifyRequest<{ Params: { consultationId: string } }>,
         reply: FastifyReply,
     ) {
         const userId = request.user.sub;
-        const link = await consultationService.callDoctor(userId);
+        const { consultationId } = request.params;
+
+        const link = await consultationService.callDoctor(userId, consultationId);
         return reply.status(200).send({
             success: true,
             data: { link },
@@ -136,7 +158,7 @@ export class ConsultationController {
     ) {
         const userId = request.user.sub;
         const { consultationId } = request.params;
-        const confirmation = await consultationService.getPaymentConfirmation(userId, consultationId);
+        const confirmation = await consultationService.getPaymentConfirmation(consultationId, userId);
         return reply.status(200).send({
             success: true,
             data: confirmation,

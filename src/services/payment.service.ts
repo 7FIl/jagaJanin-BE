@@ -92,8 +92,17 @@ export class PaymentService {
 
     async checkPaymentStatus(invoiceId: string): Promise<string> {
         try {
-            const [invoice] = await Invoice.getInvoices({ lastInvoice: invoiceId });
-            return invoice!.status;
+            const [paymentRecord] = await db
+                .select({ status: payment.status })
+                .from(payment)
+                .where(eq(payment.external_id, invoiceId))
+                .limit(1);
+
+            if (!paymentRecord) {
+                throw new AppError("Invoice not found", 404);
+            }
+
+            return paymentRecord.status;
         } catch (error) {
             throw new AppError(`Failed to check payment status: ${error}`, 500);
         }
