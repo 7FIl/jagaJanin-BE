@@ -5,5 +5,6 @@ import { formInput } from "../services/form.service.js";
 
 
 export async function formRoutes(fastify: FastifyInstance) {
-    fastify.post<{ Body: formInput }>("/onboarding",{ onRequest: [fastify.authenticate], schema: onboardingFormSchema },formController.onboardingForm.bind(formController));
+    fastify.post<{ Body: formInput }>
+    ("/onboarding",{ onRequest: [fastify.authenticate], schema: onboardingFormSchema },formController.onboardingForm.bind(formController));
 }

@@ -1,7 +1,8 @@
 
+import { end } from "pdfkit";
 import { db } from "../db/index.js";
 import { doctor_profile, consultation, practice_schedule, ratings, users } from "../db/schema.js";
-import { eq, and, desc, gte } from "drizzle-orm";
+import { eq, and, desc, gte, is } from "drizzle-orm";
 
 interface consultationData {
     consulationSchedule: consultationScheduleResponse;
@@ -9,6 +10,7 @@ interface consultationData {
 }
 
 interface consultationScheduleResponse {
+    id: string;
     date: string;
     doctorName: string;
 }
@@ -46,6 +48,7 @@ interface doctorProfileResponse {
 }
 
 interface consultationBookingResponse {
+    id: string;
     doctorName: string;
     date: string;
     time: string;
@@ -56,6 +59,7 @@ interface consultationBefore extends consultationBookingResponse {
 }
 
 interface consultationAfter extends consultationBookingResponse {
+    isDone: boolean;
     isDoneRating: boolean;
 }
 
@@ -69,11 +73,6 @@ interface paginationMetadata {
     limit: number;
     total: number;
     totalPages: number;
-}
-
-interface consultationHistoryResponse {
-    done: consultationAfter[];
-    upcoming: consultationBefore[];
 }
 
 interface paginatedConsultationHistoryResponse {
@@ -123,7 +122,6 @@ export class ConsultationService {
         const limit = params?.limit || 5;
         const offset = (page - 1) * limit;
 
-        // Fetch all doctors (optimized for reasonable dataset sizes)
         const allDoctors = await db
             .select({
                 name: users.full_name,
@@ -152,7 +150,6 @@ export class ConsultationService {
         };
     }
 
-    // Get specific doctor profile with their schedule
     async getDoctorProfile(userId: string): Promise<doctorProfileResponse> {
         const [doctorData] = await db
             .select({
@@ -211,7 +208,9 @@ export class ConsultationService {
                 id: consultation.id,
                 doctorName: users.full_name,
                 startTime: consultation.start_time,
+                endTime: consultation.end_time,
                 isDone: consultation.is_done,
+                isDoneRating: consultation.is_done_rating,
             })
             .from(consultation)
             .innerJoin(doctor_profile, eq(consultation.doctor_id, doctor_profile.id))
@@ -225,31 +224,37 @@ export class ConsultationService {
 
         for (const cons of consultations) {
             const consTime = new Date(cons.startTime);
+            const constEndTime = new Date(cons.endTime);
             const baseData = {
                 doctorName: cons.doctorName,
                 date: consTime.toISOString().split("T")[0]!,
                 time: consTime.toISOString().split("T")[1]!,
             };
-
-            if (cons.isDone || consTime < now) {
+            if (!cons.isDone && constEndTime < now) {
+                await db
+                    .update(consultation)
+                    .set({ is_done: true })
+                    .where(eq(consultation.id, cons.id));
                 done.push({
                     ...baseData,
-                    isDoneRating: cons.isDone,
+                    id: cons.id,
+                    isDone: cons.isDone,
+                    isDoneRating: cons.isDoneRating,
+
                 });
             } else {
                 upcoming.push({
                     ...baseData,
-                    isTimeToConsult: consTime.getTime() - now.getTime() <= 3600000, 
+                    id: cons.id,
+                    isTimeToConsult: consTime.getTime() > now.getTime() && constEndTime.getTime() < now.getTime(),
                 });
             }
         }
 
-        // Calculate pagination for done consultations
         const doneTotal = done.length;
         const doneTotalPages = Math.ceil(doneTotal / limit);
         const donePaginated = done.slice(offset, offset + limit);
 
-        // Calculate pagination for upcoming consultations
         const upcomingTotal = upcoming.length;
         const upcomingTotalPages = Math.ceil(upcomingTotal / limit);
         const upcomingPaginated = upcoming.slice(offset, offset + limit);
@@ -279,6 +284,7 @@ export class ConsultationService {
     async getConsultationData(userId: string): Promise<consultationData> {
         const [userConsultation] = await db
             .select({
+                id: consultation.id,
                 doctorName: users.full_name,
                 startTime: consultation.start_time,
             })
@@ -295,10 +301,12 @@ export class ConsultationService {
 
         const consultationSchedule: consultationScheduleResponse = userConsultation
             ? {
+                id: userConsultation.id,
                 date: new Date(userConsultation.startTime).toISOString().split("T")[0]!,
                 doctorName: userConsultation.doctorName,
             }
             : {
+                id: "",
                 date: "",
                 doctorName: "",
             };
@@ -325,7 +333,7 @@ export class ConsultationService {
             .where(and(
                 eq(consultation.is_paid, true),
                 eq(consultation.user_id, userId),
-                eq(consultation.is_done, false),
+                eq(consultation.is_done_rating, false),
                 gte(consultation.start_time, new Date())
             ))
             .orderBy(desc(consultation.start_time))
@@ -347,6 +355,7 @@ export class ConsultationService {
         const [verifyConsultation] = await db
             .select({
                 isDone: consultation.is_done,
+                isDoneRating: consultation.is_done_rating,
                 doctorId: consultation.doctor_id,
             })
             .from(consultation)
@@ -356,11 +365,15 @@ export class ConsultationService {
             ))
             .limit(1);
 
-        if (!verifyConsultation) {
-            throw new Error("Consultation not found");
+        if (verifyConsultation!.isDone) {
+            throw new Error("Consultation is not completed yet");
+        }
+
+        if (verifyConsultation!.isDoneRating) {
+            throw new Error("You have already rated this consultation");
         }
         
-        const doctorId = verifyConsultation.doctorId;
+        const doctorId = verifyConsultation!.doctorId;
 
         await db.insert(ratings).values({
             doctor_id: doctorId,
@@ -381,6 +394,11 @@ export class ConsultationService {
             .update(doctor_profile)
             .set({ rating: averageRating.toFixed(2) })
             .where(eq(doctor_profile.id, doctorId));
+
+        await db
+            .update(consultation)
+            .set({ is_done_rating: true })
+            .where(eq(consultation.id, consultationId));
 
         return true;
     }

@@ -1,20 +1,22 @@
 import { FastifyInstance } from "fastify";
 import { consultationController } from "../controllers/consultation.controller.js";
-import {
-    getDoctorProfileSchema,
-    bookConsultationSchema,
-    giveRatingSchema,
-    getPaymentConfirmationSchema,
-} from "../schema/consultation.schema.js";
+import { getDoctorRecommendationsSchema, getDoctorProfileSchema, getConsultationHistorySchema, getConsultationDataSchema, bookConsultationSchema, giveRatingSchema, getPaymentConfirmationSchema, } from "../schema/consultation.schema.js";
 
 export async function consultationRoutes(fastify: FastifyInstance) {
-    fastify.get<{ Querystring: { page: string; limit: string } }>("/doctors/recommendations", { onRequest: [fastify.authenticate] }, (request, reply) => consultationController.getDoctorRecommendations(request, reply));
-    fastify.get<{ Params: { doctorUserId: string } }>( "/doctors/:doctorUserId", { schema: getDoctorProfileSchema, onRequest: [fastify.authenticate] }, (request, reply) => consultationController.getDoctorProfile(request, reply) );
-    fastify.get<{ Querystring: { page: string; limit: string } }>("/history",{ onRequest: [fastify.authenticate],},(request, reply) => consultationController.getConsultationHistory(request, reply));
-    fastify.get<{ Querystring: { page: string; limit: string } }>("/data",{ onRequest: [fastify.authenticate],},(request, reply) => consultationController.getConsultationData(request, reply));
-    fastify.post<{ Body: { doctorId: string; startTime: string; endTime: string } }>("/book",{ onRequest: [fastify.authenticate], schema: bookConsultationSchema },(request, reply) => consultationController.bookConsultation(request, reply) );
-    fastify.post<{ Body: { consultationId: string; ratingValue: number } }>("/rating",{ onRequest: [fastify.authenticate], schema: giveRatingSchema },(request, reply) => consultationController.giveRating(request, reply));
-    fastify.get("/call/doctor",{ onRequest: [fastify.authenticate] },(request, reply) => consultationController.callDoctor(request, reply));
-    fastify.get<{ Params: { consultationId: string } }>("/payment-confirmation/:consultationId",{ schema: getPaymentConfirmationSchema, onRequest: [fastify.authenticate] },(request, reply) => consultationController.getPaymentConfirmation(request, reply));
+    fastify.get<{ Querystring: { page?: string; limit?: string } }>
+    ("/doctors/recommendations",{ schema: getDoctorRecommendationsSchema,onRequest: [fastify.authenticate] }, consultationController.getDoctorRecommendations);
+    fastify.get<{ Params: { doctorUserId: string } }>
+    ("/doctors/:doctorUserId",{ schema: getDoctorProfileSchema,onRequest: [fastify.authenticate] }, consultationController.getDoctorProfile);
+    fastify.get<{ Querystring: { page?: string; limit?: string } }>
+    ("/history",{ schema: getConsultationHistorySchema,onRequest: [fastify.authenticate]},consultationController.getConsultationHistory);
+    fastify.get<{ Querystring: { page?: string; limit?: string } }>
+    ("/data",{ schema: getConsultationDataSchema,onRequest: [fastify.authenticate]},consultationController.getConsultationData);
+    fastify.post<{ Body: { doctorId: string; startTime: string; endTime: string } }>
+    ("/book",{ schema: bookConsultationSchema,onRequest: [fastify.authenticate]},consultationController.bookConsultation);
+    fastify.post<{ Body: { consultationId: string; ratingValue: number } }>
+    ("/rating",{ schema: giveRatingSchema,onRequest: [fastify.authenticate]},consultationController.giveRating);
+    fastify.get("/call/doctor",{ onRequest: [fastify.authenticate] },consultationController.callDoctor);
+    fastify.get<{ Params: { consultationId: string } }>
+    ("/payment-confirmation/:consultationId",{ schema: getPaymentConfirmationSchema,onRequest: [fastify.authenticate] },consultationController.getPaymentConfirmation);
 }
 

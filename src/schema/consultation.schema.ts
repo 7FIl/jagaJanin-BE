@@ -1,9 +1,42 @@
+export const getDoctorRecommendationsSchema = {
+    querystring: {
+        type: "object",
+        properties: {
+            page: { type: "string", pattern: "^[0-9]+$" },
+            limit: { type: "string", pattern: "^[0-9]+$" }
+        },
+        additionalProperties: false
+    }
+};
+
 export const getDoctorProfileSchema = {
     params: {
         type: "object",
         required: ["doctorUserId"],
         properties: {
             doctorUserId: { type: "string" }
+        },
+        additionalProperties: false
+    }
+};
+
+export const getConsultationHistorySchema = {
+    querystring: {
+        type: "object",
+        properties: {
+            page: { type: "string", pattern: "^[0-9]+$" },
+            limit: { type: "string", pattern: "^[0-9]+$" }
+        },
+        additionalProperties: false
+    }
+};
+
+export const getConsultationDataSchema = {
+    querystring: {
+        type: "object",
+        properties: {
+            page: { type: "string", pattern: "^[0-9]+$" },
+            limit: { type: "string", pattern: "^[0-9]+$" }
         },
         additionalProperties: false
     }
@@ -33,6 +66,7 @@ export const giveRatingSchema = {
         additionalProperties: false
     }
 };
+
 
 export const getPaymentConfirmationSchema = {
     params: {

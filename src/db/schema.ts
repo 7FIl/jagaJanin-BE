@@ -149,6 +149,7 @@ export const consultation = pgTable("consultation", {
     start_time: timestamp("start_time").notNull(),
     end_time: timestamp("end_time").notNull(),
     is_done: boolean("is_done").notNull().default(false),
+    is_done_rating: boolean("is_done").notNull().default(false),
     is_paid: boolean("is_paid").notNull().default(false),
     created_at: timestamp("created_at").notNull().defaultNow(),
 });
