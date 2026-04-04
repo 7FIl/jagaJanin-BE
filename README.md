@@ -4,6 +4,10 @@ JagaJanin Backend adalah layanan backend untuk aplikasi JagaJanin, yang dirancan
 
 ---
 
+## Documentation
+
+Dokumentasi bisa di akses melalui link: https://be-internship.bccdev.id/ragil/api/v1/docs/
+
 ## Technology Stack
 
 - Fastify (Web Framework)
